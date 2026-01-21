@@ -5,6 +5,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CoordinatorController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\Coordinator\PaymentController;
+use App\Http\Controllers\RatingController;
 
 Route::get('/', function () {
     return auth()->check()
