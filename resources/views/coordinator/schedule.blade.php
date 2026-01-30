@@ -76,18 +76,17 @@
 </style>
 
 <div class="space-y-6">
-    <div class="flex justify-between items-end">
-        <div>
-            <h1 class="text-3xl font-extrabold text-[#3E3F29]">
-                Schedule
-            </h1>
-            <p class="text-sm text-gray-500 mt-1">
-                Manage your appointments and personal availability.
-            </p>
-        </div>
+
+    <div>
+        <h1 class="text-3xl font-extrabold text-[#3E3F29]">
+            Schedule
+        </h1>
+        <p class="text-sm text-gray-600">
+            Create and manage your event schedules.
+        </p>
     </div>
 
-    <div class="bg-white rounded-3xl shadow-xl shadow-gray-200/50 p-6 border border-gray-100">
+    <div class="bg-white rounded-2xl shadow p-4">
         <div id="calendar"></div>
     </div>
 </div>

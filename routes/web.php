@@ -15,6 +15,25 @@ use App\Http\Controllers\ClientDashboardController;
 |--------------------------------------------------------------------------
 | ROOT
 |--------------------------------------------------------------------------
+*/
+Route::get('/', function () {
+
+    if (!auth()->check()) {
+        return view('welcome');
+    }
+
+    return match (auth()->user()->role) {
+        'admin'       => redirect()->route('dashboard'),
+        'coordinator' => redirect()->route('coordinator.dashboard'),
+        'client'      => redirect()->route('client.dashboard'),
+        default       => redirect('/login'),
+    };
+});
+
+/*
+|--------------------------------------------------------------------------
+| ROOT
+|--------------------------------------------------------------------------
 |
 | Redirect users based on their role. Guests see the welcome page.
 |
@@ -112,6 +131,14 @@ Route::middleware('auth')->group(function () {
 
     Route::delete('/profile', [ProfileController::class, 'destroy'])
         ->name('profile.destroy');
+    Route::get('/profile', [ProfileController::class, 'edit'])
+        ->name('profile.edit');
+
+    Route::patch('/profile', [ProfileController::class, 'update'])
+        ->name('profile.update');
+
+    Route::delete('/profile', [ProfileController::class, 'destroy'])
+        ->name('profile.destroy');
 
 });
 
@@ -121,19 +148,23 @@ Route::middleware('auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')->prefix('coordinators')->group(function () {
-    Route::get('/', [CoordinatorController::class, 'index'])->name('coordinators');
-    Route::get('/{event}', [CoordinatorController::class, 'byEvent'])->name('coordinators.event');
-    Route::get('/{event}/{id}', [CoordinatorController::class, 'show'])->name('coordinators.show');
-});
 
-/*
-|--------------------------------------------------------------------------
-| 2. GENERAL PAGES
-|--------------------------------------------------------------------------
-*/
-Route::middleware('auth')->group(function () {
-    Route::get('/pending', [App\Http\Controllers\AdminController::class, 'pending'])->name('pending');
+    Route::get('/', [CoordinatorController::class, 'index'])
+        ->name('coordinators');
+
+    Route::get('/{event}', [CoordinatorController::class, 'byEvent'])
+        ->name('coordinators.event');
+
+    Route::get('/{event}/{id}', [CoordinatorController::class, 'show'])
+        ->name('coordinators.show');
+
 });
+Route::middleware('auth')->group(function () {
+
+    Route::get('/pendng', fn () =>
+        view('pending')
+    )->name('pending');
+    });
 
 /*
 |--------------------------------------------------------------------------
@@ -141,33 +172,42 @@ Route::middleware('auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')
+Route::middleware('auth')
     ->prefix('coordinator')
     ->name('coordinator.')
     ->group(function () {
 
-        // Dashboard
-        Route::get('/dashboard', [CoordinatorController::class, 'dashboard'])->name('dashboard');
+        Route::get('/dashboard', fn () =>
+            view('coordinator.dashboard')
+        )->name('dashboard');
 
-        // Bookings
-        Route::get('/bookings', [CoordinatorController::class, 'bookings'])->name('bookings');
-        Route::get('/bookings/{id}', [CoordinatorController::class, 'bookingsShow'])->name('bookings.show');
+        Route::get('/bookings', fn () =>
+            view('coordinator.bookings')
+        )->name('bookings');
 
-        // ================= SCHEDULE ROUTES (FIXED) =================
-        Route::get('/schedule', [CoordinatorController::class, 'schedule'])->name('schedule');
-        Route::get('/schedule-events', [CoordinatorController::class, 'getScheduleEvents'])->name('events');
-        Route::post('/schedule/save', [CoordinatorController::class, 'saveEvent'])->name('schedule.save');
-        // ===========================================================
+        Route::get('/bookings/{id}', fn ($id) =>
+            view('coordinator.bookings-show')
+        )->name('bookings.show');
 
-        // Ratings
-        Route::get('/ratings', [CoordinatorController::class, 'reviews'])->name('ratings');
+        Route::get('/schedule', fn () =>
+            view('coordinator.schedule')
+        )->name('schedule');
 
-        // Income & Subscription (Static Views)
-        Route::get('/income', fn () => view('coordinator.income'))->name('income');
-        Route::get('/subscription', fn () => view('coordinator.subscription'))->name('subscription');
+        Route::get('/ratings', fn () =>
+            view('coordinator.ratings')
+        )->name('ratings');
 
-        // Profile
-        Route::get('/profile', [CoordinatorController::class, 'profile'])->name('profile');
-        Route::put('/profile', [CoordinatorController::class, 'updateProfile'])->name('update');
+        Route::get('/income', fn () =>
+            view('coordinator.income')
+        )->name('income');
+
+        Route::get('/subscription', fn () =>
+            view('coordinator.subscription')
+        )->name('subscription');
+
+        Route::get('/profile', fn () =>
+            view('coordinator.profile')
+        )->name('profile');
 
         // Payments
         Route::get('/checkout', [PaymentController::class, 'checkout'])->name('checkout');
@@ -176,7 +216,7 @@ Route::middleware('auth')
 
 /*
 |--------------------------------------------------------------------------
-| CLIENT DASHBOARD & ROUTES (Missing routes added here)
+| CLIENT
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')

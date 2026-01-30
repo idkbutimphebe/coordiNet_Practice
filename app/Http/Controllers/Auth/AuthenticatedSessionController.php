@@ -24,44 +24,26 @@ class AuthenticatedSessionController extends Controller
      * Handle an incoming authentication request.
      */
     public function store(LoginRequest $request): RedirectResponse
-{
-    // Authenticate user
-    $request->authenticate();
-    $request->session()->regenerate();
+    {
+        $request->authenticate();
 
-    $user = Auth::user();
+        $request->session()->regenerate();
 
-    // Restrict coordinator if not approved
-    if ($user->role === 'coordinator' && $user->status !== 'approved') {
-        Auth::logout();
+        // --- CUSTOM ROLE-BASED REDIRECT START ---
+        $user = Auth::user();
 
-        $message = $user->status === 'pending'
-            ? 'You cannot log in yet. Please wait until you receive approval from admin.'
-            : 'Your registration has been rejected. Contact admin for details.';
+        if ($user->role === 'admin') {
+            return redirect()->intended(route('admin.dashboard'));
+        } 
+        
+        if ($user->role === 'coordinator') {
+            return redirect()->intended(route('coordinator.dashboard'));
+        }
 
-        throw ValidationException::withMessages([
-            'email' => [$message],
-        ]);
+        // Default for clients
+        return redirect()->intended(route('dashboard'));
+        // --- CUSTOM ROLE-BASED REDIRECT END ---
     }
-
-    // Redirect based on role
-    if ($user->role === 'admin') {
-        return redirect()->route('admin.dashboard');
-    }
-
-    if ($user->role === 'client') {
-        return redirect()->route('client.dashboard');
-    }
-
-    if ($user->role === 'coordinator') {
-        return redirect()->route('coordinator.dashboard');
-    }
-
-    // Fallback safety
-    Auth::logout();
-    return redirect('/login');
-}
-
 
     /**
      * Destroy an authenticated session.

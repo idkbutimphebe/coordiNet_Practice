@@ -4,8 +4,8 @@
 
 <div class="p-6 space-y-8">
 
-    <!-- PAGE HEADER (SCREEN ONLY) -->
-    <div class="flex items-center justify-between no-print">
+    <!-- PAGE HEADER (SCREEN ONLY) (SCREEN ONLY) -->
+    <div class="flex items-center justify-between no-print no-print">
         <div>
             <h1 class="text-3xl font-extrabold text-[#3E3F29] tracking-tight">
                 All Clients
@@ -14,6 +14,7 @@
                 Approved clients and their assigned events
             </p>
         </div>
+
 
         <div class="flex items-center gap-3">
             <a href="{{ route('dashboard') }}"
@@ -33,6 +34,8 @@
         </div>
     </div>
 
+    <!-- ================= PRINT AREA ================= -->
+    <div class="print-area bg-white rounded-2xl shadow-sm overflow-hidden">
     <!-- ================= PRINT AREA ================= -->
     <div class="print-area bg-white rounded-2xl shadow-sm overflow-hidden">
 
@@ -91,8 +94,38 @@
 
     <!-- PAGINATION (SCREEN ONLY) -->
     <div class="mt-6 py-4 no-print">
+    <!-- PAGINATION (SCREEN ONLY) -->
+    <div class="mt-6 py-4 no-print">
         <div class="flex justify-center">
             {{ $clients->links() }}
+            <nav class="flex items-center gap-2 text-sm">
+
+                <button disabled
+                        class="px-2.5 py-1.5 rounded-md bg-[#778873]
+                               text-white opacity-40">
+                    ‹
+                </button>
+
+                <button
+                        class="px-3 py-1.5 rounded-md bg-[#3E3F29]
+                               text-white font-medium">
+                    1
+                </button>
+
+                <button
+                        class="px-3 py-1.5 rounded-md bg-[#A1BC98]
+                               text-[#3E3F29]
+                               hover:bg-[#778873] hover:text-white transition">
+                    2
+                </button>
+
+                <button
+                        class="px-2.5 py-1.5 rounded-md bg-[#778873]
+                               text-white hover:bg-[#3E3F29] transition">
+                    ›
+                </button>
+
+            </nav>
         </div>
     </div>
 
