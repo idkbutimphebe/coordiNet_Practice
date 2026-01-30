@@ -33,6 +33,7 @@ class AuthenticatedSessionController extends Controller
 
         // ADMIN → /dashboard
         if ($user->role === 'admin') {
+<<<<<<< Updated upstream
             return redirect()->route('dashboard');
         }
 
@@ -49,6 +50,18 @@ class AuthenticatedSessionController extends Controller
         // Fallback (safety)
         Auth::logout();
         return redirect('/login');
+=======
+            return redirect()->intended(route('dashboard'));
+        } 
+        
+        if ($user->role === 'coordinator') {
+            return redirect()->intended(route('coordinator.dashboard'));
+        }
+
+        // Default for clients
+        return redirect()->intended(route('client.dashboard'));
+        // --- CUSTOM ROLE-BASED REDIRECT END ---
+>>>>>>> Stashed changes
     }
 
     /**

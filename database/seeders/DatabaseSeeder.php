@@ -13,13 +13,25 @@ class DatabaseSeeder extends Seeder
     /**
      * Seed the application's database.
      */
+    
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        // --- Seed the admin first ---
+        $this->call([
+            AdminUserSeeder::class,
         ]);
+
+        // --- Seed a test user ---
+
+User::updateOrCreate(
+    ['email' => 'test@example.com'], // Check if exists
+    [
+        'name' => 'Test User',
+        'password' => bcrypt('password123'), // Optional password
+        'role' => 'user',
+    ]
+);
+
+
     }
 }
