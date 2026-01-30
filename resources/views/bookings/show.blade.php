@@ -2,137 +2,116 @@
 
 @section('content')
 
-<div class="flex justify-center mt-12">
+    <div class="max-w-5xl mx-auto space-y-12">
 
-    <div class="w-full max-w-4xl">
-
-        <!-- TITLE -->
-        <div class="flex items-center gap-3 mb-6">
-            <div class="w-1 h-8 bg-[#778873] rounded-full"></div>
-            <h1 class="text-2xl font-semibold text-[#3E3F29]">
-                Booking Details
-            </h1>
+        <div class="flex flex-col md:flex-row items-end justify-between gap-6 border-b border-[#8A9A5B]/20 pb-8">
+            <div>
+                <span class="text-xs uppercase tracking-[0.3em] text-[#8A9A5B] font-semibold">Administrative Portal</span>
+                <h1 class="text-5xl font-serif italic text-[#2D2E22] mt-2">
+                    Client Profile
+                </h1>
+            </div>
+            
+            <a href="{{ route('bookings') }}" 
+               class="flex items-center gap-3 px-8 py-3 rounded-full border border-[#2D2E22] text-[#2D2E22] font-medium text-sm hover:bg-[#2D2E22] hover:text-white transition-all duration-500 ease-in-out">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                <span class="tracking-widest uppercase text-[10px]">Back to Archive</span>
+            </a>
         </div>
 
-        <!-- MAIN CARD -->
-        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
 
-            <!-- TOP ACCENT -->
-            <div class="h-1 bg-gradient-to-r from-[#A1BC98] to-[#778873]"></div>
+            <div class="lg:col-span-4 space-y-8">
+                <div class="relative bg-white p-10 rounded-[3rem] shadow-sm border border-[#8A9A5B]/10 overflow-hidden text-center">
+                    
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-[#F9F8F4] rounded-full -mr-16 -mt-16"></div>
 
-            <div class="p-8">
-
-                <!-- CLIENT INFO -->
-                <div class="flex items-center gap-4 mb-8">
-                    <div
-                        class="w-14 h-14 rounded-full
-                               bg-[#A1BC98]/60
-                               flex items-center justify-center
-                               text-[#3E3F29] font-bold text-lg">
+                    <div class="mx-auto w-24 h-24 rounded-full bg-[#8A9A5B]/10 border border-[#8A9A5B]/20 text-[#8A9A5B] text-2xl font-serif flex items-center justify-center italic mb-6">
                         JS
                     </div>
 
-                    <div>
-                        <h2 class="text-xl font-semibold text-[#3E3F29]">
-                            Jan Tirzuh Santos
-                        </h2>
-                        <p class="text-sm text-[#778873]">
-                            Booking Request
-                        </p>
+                    <h2 class="text-3xl font-serif text-[#2D2E22]">
+                        Jan Tirzuh <span class="block italic opacity-70 text-2xl">Santos</span>
+                    </h2>
+
+                    <div class="mt-4 flex flex-col items-center gap-3">
+                        <span class="px-4 py-1 rounded-full bg-[#F9F8F4] text-[#8A9A5B] text-[10px] uppercase tracking-tighter font-bold border border-[#8A9A5B]/20">
+                            New Client
+                        </span>
+                        <span class="text-xs italic text-gray-400">Status: Pending Review</span>
                     </div>
 
-                    <!-- STATUS -->
-                    <span
-                        class="ml-auto px-4 py-1.5 text-xs rounded-full
-                               bg-[#A1BC98]
-                               text-[#3E3F29] font-semibold shadow-sm">
-                        Pending
-                    </span>
+                    <div class="mt-10 pt-8 border-t border-gray-50 grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-[9px] uppercase tracking-widest text-gray-400 mb-1">Bookings</p>
+                            <p class="text-xl font-medium">01</p>
+                        </div>
+                        <div>
+                            <p class="text-[9px] uppercase tracking-widest text-gray-400 mb-1">Portfolio</p>
+                            <p class="text-xl font-medium">N/A</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-8 space-y-8">
+
+                <div class="bg-[#2D2E22] rounded-[3rem] p-10 text-white flex justify-between items-center shadow-2xl relative overflow-hidden">
+                    <div class="relative z-10">
+                        <p class="uppercase text-[10px] tracking-[0.4em] text-[#8A9A5B] mb-4 font-bold">The Main Event</p>
+                        <h3 class="text-5xl font-serif">March 13, 2025</h3>
+                    </div>
+                    
+                    <div class="relative z-10 text-right">
+                        <div class="text-6xl font-serif italic text-[#8A9A5B]/40">30</div>
+                        <div class="text-[10px] uppercase tracking-widest">Days Away</div>
+                    </div>
+                    
+                    <div class="absolute inset-0 opacity-10 pointer-events-none uppercase text-[8rem] font-serif -rotate-12 translate-y-10">
+                        Date
+                    </div>
                 </div>
 
-                <!-- DETAILS GRID -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                    <!-- CARD -->
-                    <div class="p-5 rounded-xl bg-[#A1BC98]/20">
-                        <p class="text-xs uppercase tracking-wide text-[#778873]">
-                            Event Requested
-                        </p>
-                        <p class="mt-1 font-semibold text-[#3E3F29]">
-                            Proposal Booking
-                        </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    
+                    <div class="bg-white p-8 rounded-[2.5rem] border border-[#8A9A5B]/10 hover:border-[#8A9A5B]/40 transition-colors duration-500">
+                        <h4 class="text-[11px] uppercase tracking-[0.3em] text-[#8A9A5B] font-bold mb-6 flex items-center gap-3">
+                            <span class="w-1 h-1 rounded-full bg-[#8A9A5B]"></span>
+                            Communication
+                        </h4>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-[9px] uppercase text-gray-400 tracking-wider mb-1">Email Address</label>
+                                <p class="text-sm font-medium border-b border-gray-50 pb-2">jan.santos@example.com</p>
+                            </div>
+                            <div>
+                                <label class="block text-[9px] uppercase text-gray-400 tracking-wider mb-1">Phone Number</label>
+                                <p class="text-sm font-medium">+63 917 123 4567</p>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="p-5 rounded-xl bg-[#A1BC98]/20">
-                        <p class="text-xs uppercase tracking-wide text-[#778873]">
-                            Requested Date
-                        </p>
-                        <p class="mt-1 font-semibold text-[#3E3F29]">
-                            March 13, 2025
-                        </p>
-                    </div>
-
-                    <div class="p-5 rounded-xl bg-[#A1BC98]/20">
-                        <p class="text-xs uppercase tracking-wide text-[#778873]">
-                            Coordinator
-                        </p>
-                        <p class="mt-1 font-semibold text-[#3E3F29]">
-                            Not Assigned
-                        </p>
-                    </div>
-
-                    <div class="p-5 rounded-xl bg-[#A1BC98]/20">
-                        <p class="text-xs uppercase tracking-wide text-[#778873]">
-                            Request ID
-                        </p>
-                        <p class="mt-1 font-semibold text-[#3E3F29]">
-                            #BK-2025-0313
-                        </p>
+                    <div class="bg-white p-8 rounded-[2.5rem] border border-[#8A9A5B]/10 hover:border-[#8A9A5B]/40 transition-colors duration-500">
+                        <h4 class="text-[11px] uppercase tracking-[0.3em] text-[#8A9A5B] font-bold mb-6 flex items-center gap-3">
+                            <span class="w-1 h-1 rounded-full bg-[#8A9A5B]"></span>
+                            Logistics
+                        </h4>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-[9px] uppercase text-gray-400 tracking-wider mb-1">Event Category</label>
+                                <p class="text-sm font-medium italic border-b border-gray-50 pb-2">Proposal Booking</p>
+                            </div>
+                            <div>
+                                <label class="block text-[9px] uppercase text-gray-400 tracking-wider mb-1">Primary Location</label>
+                                <p class="text-sm font-medium">Davao City, PH</p>
+                            </div>
+                        </div>
                     </div>
 
                 </div>
-
-                <!-- ACTIONS -->
-<div class="mt-10 flex justify-end gap-3">
-
-    <a href="{{ route('bookings') }}"
-       class="px-5 py-2 rounded-lg text-sm
-              bg-[#778873] text-white
-              border border-[#778873]
-              hover:bg-[#3E3F29]
-              hover:border-[#3E3F29]
-              transition">
-        Back
-    </a>
-
-    <button
-        class="px-5 py-2 rounded-lg text-sm
-               bg-[#778873] text-white
-               border border-[#778873]
-               hover:bg-[#3E3F29]
-               hover:border-[#3E3F29]
-               shadow-sm transition">
-        Approve
-    </button>
-
-    <button
-        class="px-5 py-2 rounded-lg text-sm
-               bg-[#778873] text-white
-               border border-[#778873]
-               hover:bg-[#3E3F29]
-               hover:border-[#3E3F29]
-               transition">
-        Reject
-    </button>
-
-</div>
-
-
-                </div>
-
             </div>
         </div>
-
     </div>
 </div>
+
 @endsection

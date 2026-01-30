@@ -4,29 +4,38 @@
 
 <div class="p-6 space-y-8">
 
-    <!-- PAGE HEADER -->
-    <div class="flex items-center justify-between">
+    <!-- PAGE HEADER (SCREEN ONLY) -->
+    <div class="flex items-center justify-between no-print">
         <div>
             <h1 class="text-3xl font-extrabold text-[#3E3F29] tracking-tight">
-                Clients
+                All Clients
             </h1>
             <p class="text-sm text-gray-600 mt-1">
                 Approved clients and their assigned events
             </p>
         </div>
 
-        <!-- BACK BUTTON -->
-        <a href="{{ route('reports') }}"
-           class="px-4 py-2 text-sm rounded-lg
-                  border border-[#778873]
-                  text-[#3E3F29]
-                  hover:bg-[#A1BC98]/40 transition">
-            ← Back
-        </a>
+
+        <div class="flex items-center gap-3">
+            <a href="{{ route('dashboard') }}"
+               class="px-4 py-2 text-sm rounded-lg
+                      border border-[#A1BC98]
+                      text-[#3E3F29]
+                      hover:bg-[#E3EAD7] transition">
+                ← Back
+            </a>
+
+            <button onclick="window.print()" 
+                    class="px-4 py-2 text-sm rounded-lg
+                           bg-[#3E3F29] text-white
+                           hover:bg-[#2c2d1f] transition">
+                🖨️ Print
+            </button>
+        </div>
     </div>
 
-    <!-- ================= CLIENTS TABLE ================= -->
-    <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+    <!-- ================= PRINT AREA ================= -->
+    <div class="print-area bg-white rounded-2xl shadow-sm overflow-hidden">
 
         <table class="w-full text-sm text-left">
             <thead class="bg-[#A1BC98]/40 text-[#3E3F29]">
@@ -40,7 +49,6 @@
             </thead>
 
             <tbody class="divide-y divide-[#778873]/20">
-
                 @php
                     $clients = [
                         ['Jan Tirzuh Santos','Birthday','Juan Dela Cruz','Mar 10, 2025'],
@@ -57,8 +65,7 @@
                 @endphp
 
                 @foreach($clients as [$name, $event, $coordinator, $schedule])
-                <tr class="hover:bg-[#A1BC98]/20 transition">
-
+                <tr>
                     <td class="py-3 px-5 font-medium text-[#3E3F29]">
                         {{ $name }}
                     </td>
@@ -81,50 +88,40 @@
                             Approved
                         </span>
                     </td>
-
                 </tr>
                 @endforeach
-
             </tbody>
         </table>
 
     </div>
 
-    <!-- ================= PAGINATION ================= -->
-    <div class="mt-6 py-4">
+    <!-- PAGINATION (SCREEN ONLY) -->
+    <div class="mt-6 py-4 no-print">
         <div class="flex justify-center">
             <nav class="flex items-center gap-2 text-sm">
 
-                <button
-                    class="px-2.5 py-1.5 rounded-md bg-[#778873] text-white
-                           hover:bg-[#3E3F29] transition disabled:opacity-40"
-                    disabled>
+                <button disabled
+                        class="px-2.5 py-1.5 rounded-md bg-[#778873]
+                               text-white opacity-40">
                     ‹
                 </button>
 
                 <button
-                    class="px-3 py-1.5 rounded-md bg-[#3E3F29]
-                           text-white font-medium">
+                        class="px-3 py-1.5 rounded-md bg-[#3E3F29]
+                               text-white font-medium">
                     1
                 </button>
 
                 <button
-                    class="px-3 py-1.5 rounded-md bg-[#A1BC98]
-                           text-[#3E3F29]
-                           hover:bg-[#778873] hover:text-white transition">
+                        class="px-3 py-1.5 rounded-md bg-[#A1BC98]
+                               text-[#3E3F29]
+                               hover:bg-[#778873] hover:text-white transition">
                     2
                 </button>
 
                 <button
-                    class="px-3 py-1.5 rounded-md bg-[#A1BC98]
-                           text-[#3E3F29]
-                           hover:bg-[#778873] hover:text-white transition">
-                    3
-                </button>
-
-                <button
-                    class="px-2.5 py-1.5 rounded-md bg-[#778873] text-white
-                           hover:bg-[#3E3F29] transition">
+                        class="px-2.5 py-1.5 rounded-md bg-[#778873]
+                               text-white hover:bg-[#3E3F29] transition">
                     ›
                 </button>
 
@@ -133,5 +130,45 @@
     </div>
 
 </div>
+
+<!-- ================= PRINT STYLES ================= -->
+<style>
+@media print {
+
+    /* Hide everything */
+    body * {
+        visibility: hidden;
+    }
+
+    /* Show only table */
+    .print-area,
+    .print-area * {
+        visibility: visible;
+    }
+
+    .print-area {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+    }
+
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    th, td {
+        border: 1px solid #A1BC98 !important;
+        padding: 12px 18px !important;
+    }
+
+    th {
+        background: #A1BC98 !important;
+        color: #3E3F29 !important;
+        font-weight: 700 !important;
+    }
+}
+</style>
 
 @endsection

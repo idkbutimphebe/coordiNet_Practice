@@ -4,7 +4,6 @@
 
 <div class="space-y-6">
 
-    <!-- HEADER -->
     <div>
         <h1 class="text-3xl font-extrabold text-[#3E3F29]">
             Schedule
@@ -14,14 +13,12 @@
         </p>
     </div>
 
-    <!-- CALENDAR CARD -->
     <div class="bg-white rounded-2xl shadow p-4">
         <div id="calendar"></div>
     </div>
 
 </div>
 
-<!-- ================= ADD EVENT MODAL ================= -->
 <div id="addEventModal"
      class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
 
@@ -73,7 +70,6 @@
     </div>
 </div>
 
-<!-- ================= VIEW EVENT MODAL ================= -->
 <div id="viewEventModal"
      class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
 

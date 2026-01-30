@@ -1,120 +1,112 @@
 @extends('layouts.dashboard')
 
 @section('content')
-
-<div class="p-6 space-y-10 bg-[#F6F8F5] min-h-screen">
+<div class="p-6 space-y-6">
 
     <!-- PAGE HEADER -->
-    <div class="flex items-center justify-between">
+    <div class="flex items-center justify-between no-print">
         <div>
             <h1 class="text-3xl font-extrabold text-[#3E3F29] tracking-tight">
-                Ratings & Feedback
+                Client Ratings & Feedback
             </h1>
-            <p class="text-sm text-[#6B705C] mt-1">
-                What clients say about their coordinators
+            <p class="text-sm text-gray-600 mt-1">
+                Feedback and ratings from clients per event
             </p>
         </div>
 
-        <a href="{{ route('reports') }}"
-           class="px-4 py-2 text-sm rounded-lg
-                  border border-[#A1BC98]
-                  text-[#3E3F29]
-                  hover:bg-[#E3EAD7] transition">
-            ← Back
-        </a>
+
+        <div class="flex items-center gap-3">
+            <a href="{{ route('dashboard') }}"
+               class="px-4 py-2 text-sm rounded-lg
+                      border border-[#A1BC98]
+                      text-[#3E3F29]
+                      hover:bg-[#E3EAD7] transition">
+                ← Back
+            </a>
+
+            <button onclick="window.print()" 
+                    class="px-4 py-2 text-sm rounded-lg
+                           bg-[#3E3F29] text-white
+                           hover:bg-[#2c2d1f] transition">
+                🖨️ Print
+            </button>
+        </div>
     </div>
 
-    <!-- ================= RATINGS CARDS ================= -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    <!-- ================= TABLE CARD ================= -->
+    <div class="bg-white rounded-2xl shadow-sm overflow-hidden print:shadow-none">
 
-        @php
-            $ratings = [
-                ['Jan Tirzuh Santos','Juan Dela Cruz',5,'Everything was perfect 💕'],
-                ['Maria Lopez','April Martinez',4,'Very smooth coordination 🌸'],
-                ['John Reyes','Mark Kevin',5,'Stress-free and organized ⭐'],
-                ['Anna Cruz','Lara Santos',3,'Good but can improve 😊'],
-                ['Kevin Ramos','Ryan Torres',4,'Professional and friendly 👍'],
-            ];
-        @endphp
+        <table class="w-full text-sm text-left">
+            <thead class="bg-[#A1BC98]/40 text-[#3E3F29]">
+                <tr>
+                    <th class="py-3 px-5 font-semibold">#</th>
+                    <th class="py-3 px-5 font-semibold">Client Name</th>
+                    <th class="py-3 px-5 font-semibold">Event</th>
+                    <th class="py-3 px-5 font-semibold">Coordinator</th>
+                    <th class="py-3 px-5 font-semibold">Rating</th>
+                    <th class="py-3 px-5 font-semibold">Feedback</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-[#778873]/20">
+                @php
+                    $ratings = [
+                        ['1','Jan Tirzuh Santos','Birthday','Juan Dela Cruz','5⭐','Great service, very professional!'],
+                        ['2','Maria Lopez','Wedding','April Martinez','4.8⭐','Everything went smoothly.'],
+                        ['3','John Reyes','Birthday','Mark Kevin','4.5⭐','Coordinator was very helpful.'],
+                        ['4','Anna Cruz','Wedding','Lara Santos','5⭐','Perfectly organized!'],
+                        ['5','Kevin Ramos','Others','Ryan Torres','4.7⭐','Good experience overall.'],
+                        ['6','Ella Gomez','Wedding','Paulo Reyes','4.9⭐','Highly recommend!'],
+                        ['7','Chris Mendoza','Birthday','Leo Navarro','4.6⭐','Everything went well.'],
+                        ['8','Sofia Lim','Others','Kurt Valdez','4.8⭐','Coordinator was attentive.'],
+                        ['9','Mark Dizon','Birthday','Neil Ramos','5⭐','Exceeded expectations!'],
+                        ['10','Paula Reyes','Wedding','Ivy Santos','4.7⭐','Very satisfied.'],
+                    ];
+                @endphp
 
-        @foreach($ratings as [$client, $coordinator, $stars, $feedback])
-        <div class="group relative rounded-3xl p-6
-                    bg-gradient-to-br from-[#778873] to-[#3E3F29]
-                    text-white shadow-lg
-                    hover:-translate-y-1 hover:shadow-2xl
-                    transition-all duration-300">
+                @foreach($ratings as [$id, $client, $event, $coordinator, $rating, $feedback])
+                <tr class="hover:bg-[#A1BC98]/20 transition print:hover:bg-transparent">
+                    <td class="py-3 px-5 font-bold text-[#3E3F29]">{{ $id }}</td>
+                    <td class="py-3 px-5 text-[#3E3F29]">{{ $client }}</td>
+                    <td class="py-3 px-5 text-[#3E3F29]">{{ $event }}</td>
+                    <td class="py-3 px-5 text-[#3E3F29]">{{ $coordinator }}</td>
+                    <td class="py-3 px-5 font-bold text-[#3E3F29]">{{ $rating }}</td>
+                    <td class="py-3 px-5 text-[#3E3F29]">{{ $feedback }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
 
-            <!-- glow -->
-            <div class="absolute inset-0 bg-white/10 opacity-0
-                        group-hover:opacity-100 rounded-3xl transition"></div>
-
-            <div class="relative space-y-4">
-
-                <!-- CLIENT NAME -->
-                <div>
-                    <h3 class="text-lg font-bold">
-                        {{ $client }}
-                    </h3>
-                    <p class="text-xs text-white/80">
-                        Coordinator: {{ $coordinator }}
-                    </p>
-                </div>
-
-                <!-- STARS -->
-                <div class="flex items-center gap-1 text-yellow-300">
-                    @for($i = 1; $i <= 5; $i++)
-                        <svg class="w-5 h-5 {{ $i <= $stars ? 'opacity-100' : 'opacity-30' }}"
-                             fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.955h4.157
-                                     c.969 0 1.371 1.24.588 1.81l-3.363 2.443
-                                     1.287 3.955c.3.921-.755 1.688-1.54 1.118
-                                     L10 13.347l-3.366 2.461c-.784.57-1.838-.197-1.539-1.118
-                                     l1.287-3.955-3.363-2.443c-.784-.57-.38-1.81.588-1.81h4.157l1.286-3.955z"/>
-                        </svg>
-                    @endfor
-                </div>
-
-                <!-- FEEDBACK -->
-                <p class="text-sm text-white/90 italic">
-                    “{{ $feedback }}”
-                </p>
-
-            </div>
-        </div>
-        @endforeach
-
-    </div>
-
-    <!-- ================= PAGINATION ================= -->
-    <div class="pt-8">
-        <div class="flex justify-center">
-            <nav class="flex items-center gap-2 text-sm">
-
-                <button class="px-3 py-1.5 rounded-md bg-[#A1BC98]
-                               text-[#3E3F29] opacity-40 cursor-not-allowed">
-                    ‹
-                </button>
-
-                <button class="px-3 py-1.5 rounded-md bg-[#3E3F29] text-white">
-                    1
-                </button>
-
-                <button class="px-3 py-1.5 rounded-md bg-[#A1BC98]
-                               text-[#3E3F29] hover:bg-[#778873]
-                               hover:text-white transition">
-                    2
-                </button>
-
-                <button class="px-3 py-1.5 rounded-md bg-[#A1BC98]
-                               text-[#3E3F29] hover:bg-[#778873]
-                               hover:text-white transition">
-                    ›
-                </button>
-
-            </nav>
-        </div>
     </div>
 
 </div>
 
+<!-- ================= PRINT STYLES ================= -->
+<style>
+@media print {
+
+    .no-print {
+        display: none !important;
+    }
+
+    body * {
+        background: white !important;
+    }
+
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    th, td {
+        border: 1px solid #A1BC98 !important;
+        padding: 12px 20px !important;
+    }
+
+    th {
+        background: #A1BC98 !important;
+        color: #3E3F29 !important;
+        font-weight: 600 !important;
+    }
+}
+</style>
 @endsection

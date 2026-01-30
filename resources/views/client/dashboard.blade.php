@@ -2,7 +2,6 @@
 
 @section('content')
 
-<!-- ================= GREETING ================= -->
 <div class="mb-8">
     <h2 class="text-3xl font-bold text-[#3E3F29]">
         Good Morning, {{ Auth::user()->name }}!
@@ -12,10 +11,8 @@
     </p>
 </div>
 
-<!-- ================= CLIENT TOP GRID ================= -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
 
-    <!-- ===== LEFT : MY EVENT BOOKINGS ===== -->
     <div class="lg:col-span-2 bg-white rounded-2xl shadow p-6">
 
         <div class="flex items-center justify-between mb-6">
@@ -23,12 +20,11 @@
                 My Event Bookings
             </h3>
             <span class="text-sm px-3 py-1 rounded-full bg-[#F6F8F5]
-                         text-[#778873] font-semibold">
+                          text-[#778873] font-semibold">
                 Recent Events
             </span>
         </div>
 
-        <!-- EMPTY STATE (INTENTIONAL) -->
         <div class="flex flex-col items-center justify-center
                     h-48 text-center text-[#778873]">
 
@@ -51,7 +47,6 @@
 
     </div>
 
-    <!-- ===== RIGHT : CLIENT STATS ===== -->
     <div class="space-y-4">
 
     @php
@@ -67,36 +62,16 @@
                 rounded-2xl text-white p-5 shadow
                 flex items-center gap-4">
 
-        <!-- ICON -->
         <div class="bg-white/20 p-3 rounded-full">
             @if($stat['icon'] === 'calendar')
-            <!-- CALENDAR ICON -->
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2"
-                 viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7
-                         a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-            </svg>
-
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
             @elseif($stat['icon'] === 'clock')
-            <!-- CLOCK ICON -->
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2"
-                 viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             @else
-            <!-- CHECK ICON -->
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2"
-                 viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                      d="M5 13l4 4L19 7"/>
-            </svg>
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
             @endif
         </div>
 
-        <!-- TEXT -->
         <div>
             <p class="text-sm opacity-80">{{ $stat['label'] }}</p>
             <h3 class="text-3xl font-bold">{{ $stat['value'] }}</h3>
@@ -105,100 +80,73 @@
     </div>
     @endforeach
 
+    </div>
 </div>
+
+<div class="mb-10">
+    <div class="flex items-center justify-between mb-6">
+        <h3 class="text-2xl font-bold text-[#3E3F29]">
+            Recommended Coordinators
+        </h3>
+        <a href="#" class="text-sm font-semibold text-[#778873] hover:underline">
+            View All Coordinators &rarr;
+        </a>
     </div>
 
-<!-- ================= CLIENT CHARTS + CALENDAR ================= -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
-    <!-- BOOKING STATUS -->
-    <div class="bg-white rounded-2xl shadow p-6">
-        <h3 class="text-lg font-bold text-[#3E3F29] mb-4">
-            My Booking Status
-        </h3>
-        <canvas id="clientBookingChart" height="220"></canvas>
-    </div>
+        @php
+            // Mock Data for Coordinators
+            $coordinators = [
+                ['name' => 'Sarah Jenkins', 'specialty' => 'Weddings', 'rating' => 5.0, 'reviews' => 24],
+                ['name' => 'Michael Chen', 'specialty' => 'Corporate Events', 'rating' => 4.9, 'reviews' => 18],
+                ['name' => 'Jessica Alva', 'specialty' => 'Birthdays & Debuts', 'rating' => 4.8, 'reviews' => 32],
+                ['name' => 'David Ross', 'specialty' => 'Weddings', 'rating' => 4.9, 'reviews' => 12],
+            ];
+        @endphp
 
-    <!-- RATINGS -->
-    <div class="bg-white rounded-2xl shadow p-6">
-        <h3 class="text-lg font-bold text-[#3E3F29] mb-4">
-            My Submitted Ratings
-        </h3>
-        <canvas id="clientRatingChart" height="220"></canvas>
-    </div>
+        @foreach($coordinators as $coord)
+        <div class="bg-white rounded-2xl shadow p-5 border border-[#F6F8F5]
+                    hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
 
-    <!-- EVENT CALENDAR -->
-    <div class="bg-white rounded-2xl shadow p-6">
-        <h3 class="text-lg font-bold text-[#3E3F29] mb-2">
-            Event Calendar
-        </h3>
-
-        <div class="grid grid-cols-7 gap-2 text-center text-sm">
-            @foreach(['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] as $day)
-                <div class="font-semibold text-[#778873]">{{ $day }}</div>
-            @endforeach
-
-            @for($i = 1; $i <= 31; $i++)
-                <div class="p-2 rounded-lg
-                    {{ in_array($i, [15, 20])
-                        ? 'bg-[#778873] text-white font-semibold'
-                        : 'bg-[#F6F8F5]' }}">
-                    {{ $i }}
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 rounded-full bg-[#F6F8F5] text-[#778873]
+                            flex items-center justify-center font-bold text-lg">
+                    {{ substr($coord['name'], 0, 1) }}
                 </div>
-            @endfor
-        </div>
-    </div>
+                <span class="text-xs font-semibold px-2 py-1 rounded bg-[#E8EFE5] text-[#556652]">
+                    {{ $coord['specialty'] }}
+                </span>
+            </div>
 
+            <h4 class="text-lg font-bold text-[#3E3F29] mb-1">
+                {{ $coord['name'] }}
+            </h4>
+
+            <div class="flex items-center gap-1 mb-4">
+                @for($i=0; $i<5; $i++)
+                    <svg class="w-4 h-4 {{ $i < round($coord['rating']) ? 'text-yellow-400' : 'text-gray-300' }}"
+                         fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                    </svg>
+                @endfor
+                <span class="text-xs text-gray-500 ml-1">
+                    ({{ $coord['reviews'] }} reviews)
+                </span>
+            </div>
+
+            <button class="w-full py-2 rounded-lg border-2 border-[#3E3F29]
+                           text-[#3E3F29] font-bold text-sm
+                           hover:bg-[#3E3F29] hover:text-white transition-colors">
+                View Profile
+            </button>
+        </div>
+        @endforeach
+
+    </div>
 </div>
 
 @endsection
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-
-    new Chart(document.getElementById('clientBookingChart'), {
-        type: 'doughnut',
-        data: {
-            labels: ['Pending', 'Approved', 'Completed'],
-            datasets: [{
-                data: [1, 1, 2],
-                backgroundColor: ['#A1BC98', '#778873', '#3E3F29']
-            }]
-        },
-        options: {
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: { color: '#3E3F29' }
-                }
-            }
-        }
-    });
-
-    new Chart(document.getElementById('clientRatingChart'), {
-        type: 'bar',
-        data: {
-            labels: ['Wedding', 'Birthday'],
-            datasets: [{
-                data: [5, 4],
-                backgroundColor: '#778873'
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 5,
-                    ticks: { stepSize: 1 }
-                }
-            },
-            plugins: { legend: { display: false } }
-        }
-    });
-
-});
-</script>
 @endpush

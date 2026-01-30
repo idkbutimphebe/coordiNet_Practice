@@ -19,7 +19,7 @@
         $stats = [
             ['label'=>'Total Users','value'=>'3,000','icon'=>'users'],
             ['label'=>'Total Bookings','value'=>'1,250','icon'=>'calendar'],
-            ['label'=>'Pending Bookings','value'=>'50','icon'=>'clock'],
+            ['label'=>'Pending Coordinators','value'=>'50','icon'=>'clock'],
         ];
     @endphp
 
