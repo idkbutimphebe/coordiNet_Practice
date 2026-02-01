@@ -9,6 +9,7 @@ use App\Http\Controllers\RatingController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\ClientDashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,6 +32,22 @@ Route::get('/', function () {
         default       => redirect('/login'),
     };
 });
+// Registration
+Route::get('register', [RegisteredUserController::class, 'create'])->name('register');
+Route::post('register', [RegisteredUserController::class, 'store']);
+
+// Login
+Route::get('login', [AuthenticatedSessionController::class, 'create'])->name('login');
+Route::post('login', [AuthenticatedSessionController::class, 'store']);
+
+// Dashboard (role-based)
+Route::middleware(['auth', 'role:client'])->group(function() {
+    Route::get('/client/dashboard', [ClientDashboardController::class, 'index'])->name('client.dashboard');
+});
+
+Route::middleware(['auth', 'role:coordinator'])->group(function() {
+    Route::get('/coordinator/dashboard', [CoordinatorDashboardController::class, 'index'])->name('coordinator.dashboard');
+});
 
 // AUTH ROUTES
 Route::middleware(['auth'])->group(function () {
@@ -38,16 +55,14 @@ Route::middleware(['auth'])->group(function () {
     // ADMIN DASHBOARD
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
-// BOOKINGS
+    // BOOKINGS
+    Route::prefix('bookings')->group(function () {
+        // List all bookings
+        Route::get('/', [AdminController::class, 'index'])->name('bookings');
 
-Route::prefix('bookings')->group(function () {
-    // List all bookings
-    Route::get('/', [AdminController::class, 'index'])->name('bookings');
-
-    // Show single booking using "show" page
-    Route::get('/show/{id}', [AdminController::class, 'show'])->name('bookings.show');
-});
-
+        // Show single booking using "show" page
+        Route::get('/show/{id}', [AdminController::class, 'show'])->name('bookings.show');
+    });
 
     // PENDING COORDINATORS
     Route::get('/pending', [AdminController::class, 'pending'])->name('pending');
@@ -100,14 +115,10 @@ Route::middleware('auth')->group(function () {
 
 });
 
-
-
 /*
 |--------------------------------------------------------------------------
 | 1. COORDINATORS LIST (PUBLIC/CLIENT VIEW)
 |--------------------------------------------------------------------------
-| Note: Ensure your CoordinatorController has 'index', 'byEvent', and 'show' methods
-| if you want to use these routes.
 */
 Route::middleware('auth')->prefix('coordinators')->group(function () {
     Route::get('/', [CoordinatorController::class, 'index'])->name('coordinators');
@@ -121,9 +132,9 @@ Route::middleware('auth')->prefix('coordinators')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')->group(function () {
-    // Points to the 'pending' method in your AdminController
     Route::get('/pending', [App\Http\Controllers\AdminController::class, 'pending'])->name('pending');
 });
+
 /*
 |--------------------------------------------------------------------------
 | 3. COORDINATOR DASHBOARD
@@ -142,13 +153,8 @@ Route::middleware('auth')
         Route::get('/bookings/{id}', [CoordinatorController::class, 'bookingsShow'])->name('bookings.show');
 
         // ================= SCHEDULE ROUTES (FIXED) =================
-        // 1. Show the Calendar Page
         Route::get('/schedule', [CoordinatorController::class, 'schedule'])->name('schedule');
-        
-        // 2. Fetch Data for the Calendar (CRITICAL: This allows the calendar to load events)
         Route::get('/schedule-events', [CoordinatorController::class, 'getScheduleEvents'])->name('events');
-
-        // 3. Save a new personal event (Manual add)
         Route::post('/schedule/save', [CoordinatorController::class, 'saveEvent'])->name('schedule.save');
         // ===========================================================
 
@@ -170,7 +176,7 @@ Route::middleware('auth')
 
 /*
 |--------------------------------------------------------------------------
-| CLIENT
+| CLIENT DASHBOARD & ROUTES (Missing routes added here)
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')
@@ -178,38 +184,30 @@ Route::middleware('auth')
     ->name('client.')
     ->group(function () {
 
-        Route::get('/dashboard', fn () =>
-            view('client.dashboard')
-        )->name('dashboard');
+        // Dashboard (already exists, kept as-is)
+        Route::get('/dashboard', fn () => view('client.dashboard'))->name('dashboard');
 
-        Route::get('/coordinators', fn () =>
-            view('client.coordinators')
-        )->name('coordinators');
+        // ------------------ MISSING ROUTES ADDED ------------------
 
-        Route::get('/coordinators/{name}', fn ($name) =>
-            view('client.coordinator-view', compact('name'))
-        )->name('coordinators.view');
+        // Coordinators via controller
+        Route::get('/coordinators', [ClientDashboardController::class, 'coordinatorsPage'])->name('coordinators');
+        Route::get('/coordinators/{coordinator}', [CoordinatorController::class, 'showForClient'])->name('coordinators.profile');
 
-        Route::get('/bookings', fn () =>
-            view('client.booking.index')
-        )->name('bookings.index');
+        // Bookings via controller
+        Route::get('/bookings', [ClientDashboardController::class, 'myBookings'])->name('bookings.index');
+        Route::get('/bookings/{id}', [ClientDashboardController::class, 'bookingShow'])->name('bookings.show');
 
-        Route::get('/bookings/{id}', fn ($id) =>
-            view('client.booking.show', compact('id'))
-        )->name('bookings.show');
+        // Book a coordinator
+        Route::post('/coordinators/{coordinator}/book', [ClientDashboardController::class, 'bookCoordinator'])->name('coordinators.book');
 
-        Route::get('/ratings', fn () =>
-            view('client.ratings')
-        )->name('ratings');
+        // Ratings
+        Route::get('/ratings', [ClientDashboardController::class, 'ratingsPage'])->name('ratings');
+        Route::post('/ratings', [RatingController::class, 'store'])->name('ratings.store');
 
-        Route::post('/ratings', [RatingController::class, 'store'])
-            ->name('ratings.store');
+        // Profile via controller
+        Route::get('/profile', [ClientDashboardController::class, 'profile'])->name('profile');
 
-        Route::get('/profile', fn () =>
-            view('client.profile')
-        )->name('profile');
+        // ------------------ END MISSING ROUTES ------------------
     });
-
-    
 
 require __DIR__ . '/auth.php';
