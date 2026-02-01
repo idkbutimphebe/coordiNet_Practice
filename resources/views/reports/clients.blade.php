@@ -15,7 +15,6 @@
             </p>
         </div>
 
-
         <div class="flex items-center gap-3">
             <a href="{{ route('dashboard') }}"
                class="px-4 py-2 text-sm rounded-lg
@@ -49,47 +48,42 @@
             </thead>
 
             <tbody class="divide-y divide-[#778873]/20">
-                @php
-                    $clients = [
-                        ['Jan Tirzuh Santos','Birthday','Juan Dela Cruz','Mar 10, 2025'],
-                        ['Maria Lopez','Wedding','April Martinez','Apr 18, 2025'],
-                        ['John Reyes','Birthday','Mark Kevin','May 02, 2025'],
-                        ['Anna Cruz','Wedding','Lara Santos','May 21, 2025'],
-                        ['Kevin Ramos','Others','Ryan Torres','Jun 08, 2025'],
-                        ['Ella Gomez','Wedding','Paulo Reyes','Jun 14, 2025'],
-                        ['Chris Mendoza','Birthday','Leo Navarro','Jul 01, 2025'],
-                        ['Sofia Lim','Others','Kurt Valdez','Jul 19, 2025'],
-                        ['Mark Dizon','Birthday','Neil Ramos','Aug 03, 2025'],
-                        ['Paula Reyes','Wedding','Ivy Santos','Aug 22, 2025'],
-                    ];
-                @endphp
+                @forelse($clients as $client)
+                    <tr class="hover:bg-[#A1BC98]/20 transition">
+                        <td class="py-3 px-5 font-medium text-[#3E3F29]">
+                            {{ $client->name }}
+                        </td>
 
-                @foreach($clients as [$name, $event, $coordinator, $schedule])
-                <tr>
-                    <td class="py-3 px-5 font-medium text-[#3E3F29]">
-                        {{ $name }}
-                    </td>
+                        <td class="py-3 px-5 text-gray-700">
+                            {{ $client->event->name ?? '-' }}
+                        </td>
 
-                    <td class="py-3 px-5 text-gray-700">
-                        {{ $event }}
-                    </td>
+                        <td class="py-3 px-5 text-gray-700">
+                            {{ $client->event->coordinator->coordinator_name ?? '-' }}
+                        </td>
 
-                    <td class="py-3 px-5 text-gray-700">
-                        {{ $coordinator }}
-                    </td>
+                        <td class="py-3 px-5 text-gray-700">
+                            {{ $client->event?->booking_date
+                                ? \Carbon\Carbon::parse($client->event->booking_date)->format('M d, Y')
+                                : '-' }}
+                        </td>
 
-                    <td class="py-3 px-5 text-gray-700">
-                        {{ $schedule }}
-                    </td>
-
-                    <td class="py-3 px-5">
-                        <span class="inline-block px-3 py-1 text-xs rounded-full
-                                     bg-[#A1BC98] text-[#3E3F29] font-medium">
-                            Approved
-                        </span>
-                    </td>
-                </tr>
-                @endforeach
+                        <td class="py-3 px-5">
+                            <span class="inline-block px-3 py-1 text-xs rounded-full
+                                {{ $client->status === 'approved'
+                                    ? 'bg-[#A1BC98] text-[#3E3F29]'
+                                    : 'bg-red-300 text-white' }} font-medium">
+                                {{ ucfirst($client->status) }}
+                            </span>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="5" class="py-4 px-5 text-center text-gray-500">
+                            No client found.
+                        </td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
 
@@ -98,34 +92,7 @@
     <!-- PAGINATION (SCREEN ONLY) -->
     <div class="mt-6 py-4 no-print">
         <div class="flex justify-center">
-            <nav class="flex items-center gap-2 text-sm">
-
-                <button disabled
-                        class="px-2.5 py-1.5 rounded-md bg-[#778873]
-                               text-white opacity-40">
-                    ‹
-                </button>
-
-                <button
-                        class="px-3 py-1.5 rounded-md bg-[#3E3F29]
-                               text-white font-medium">
-                    1
-                </button>
-
-                <button
-                        class="px-3 py-1.5 rounded-md bg-[#A1BC98]
-                               text-[#3E3F29]
-                               hover:bg-[#778873] hover:text-white transition">
-                    2
-                </button>
-
-                <button
-                        class="px-2.5 py-1.5 rounded-md bg-[#778873]
-                               text-white hover:bg-[#3E3F29] transition">
-                    ›
-                </button>
-
-            </nav>
+            {{ $clients->links() }}
         </div>
     </div>
 
@@ -134,40 +101,13 @@
 <!-- ================= PRINT STYLES ================= -->
 <style>
 @media print {
-
-    /* Hide everything */
-    body * {
-        visibility: hidden;
-    }
-
-    /* Show only table */
-    .print-area,
-    .print-area * {
-        visibility: visible;
-    }
-
-    .print-area {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-    }
-
-    table {
-        border-collapse: collapse;
-        width: 100%;
-    }
-
-    th, td {
-        border: 1px solid #A1BC98 !important;
-        padding: 12px 18px !important;
-    }
-
-    th {
-        background: #A1BC98 !important;
-        color: #3E3F29 !important;
-        font-weight: 700 !important;
-    }
+    body * { visibility: hidden; }
+    .print-area, .print-area * { visibility: visible; }
+    .print-area { position: absolute; top: 0; left: 0; width: 100%; }
+    table { border-collapse: collapse; width: 100%; font-size: 12px; }
+    th, td { border: 1px solid #A1BC98 !important; padding: 10px 14px !important; }
+    th { background: #A1BC98 !important; color: #3E3F29 !important; font-weight: 700 !important; }
+    tr:hover { background: transparent !important; }
 }
 </style>
 

@@ -3,14 +3,14 @@
 @section('content')
 <div class="p-6 space-y-8">
 
-    <!-- PAGE HEADER (SCREEN ONLY) -->
+    <!-- PAGE HEADER -->
     <div class="flex items-center justify-between no-print">
         <div>
             <h1 class="text-3xl font-extrabold text-[#3E3F29] tracking-tight">
                 All Coordinators
             </h1>
             <p class="text-sm text-gray-600 mt-1">
-                Complete list of registered clients
+                Complete list of registered coordinators
             </p>
         </div>
 
@@ -32,55 +32,49 @@
         </div>
     </div>
 
-    <!-- ================= CLIENTS TABLE ================= -->
+    <!-- ================= COORDINATORS TABLE ================= -->
     <div class="print-area bg-white rounded-2xl shadow-sm overflow-hidden">
 
         <table class="w-full text-sm text-left">
             <thead class="bg-[#A1BC98]/40 text-[#3E3F29]">
                 <tr>
-                    <th class="py-3 px-5 font-semibold">Client Name</th>
+                    <th class="py-3 px-5 font-semibold">Coordinator Name</th>
                     <th class="py-3 px-5 font-semibold">Email</th>
                     <th class="py-3 px-5 font-semibold">Phone</th>
-                    <th class="py-3 px-5 font-semibold text-center">
-                        Total Bookings
-                    </th>
+                    <th class="py-3 px-5 font-semibold text-center">Total Bookings</th>
                 </tr>
             </thead>
 
             <tbody class="divide-y divide-[#778873]/20">
 
-                @php
-                    $clients = [
-                        ['Jan Tirzuh Santos', 'jan@example.com', '0917-123-4567', 1],
-                        ['Maria Bello', 'maria@example.com', '0928-555-7788', 3],
-                        ['Alex Lim', 'alex@example.com', '0908-777-1122', 2],
-                        ['Anna Reyes', 'anna@example.com', '0916-222-9999', 4],
-                        ['Joshua Nunez', 'josh@example.com', '0999-888-1212', 1],
-                    ];
-                @endphp
-
-                @foreach($clients as [$name, $email, $phone, $bookings])
+                @forelse($coordinators as $coordinator)
                 <tr class="hover:bg-[#A1BC98]/20 transition">
                     <td class="py-3 px-5 font-medium text-[#3E3F29]">
-                        {{ $name }}
+                        {{ $coordinator->coordinator_name }}
                     </td>
 
                     <td class="py-3 px-5 text-gray-700">
-                        {{ $email }}
+                        {{ $coordinator->user->email ?? '-' }}
                     </td>
 
                     <td class="py-3 px-5 text-gray-700">
-                        {{ $phone }}
+                        {{ $coordinator->phone_number ?? '-' }}
                     </td>
 
                     <td class="py-3 px-5 text-center">
                         <span class="inline-block px-3 py-1 text-xs rounded-full
                                      bg-[#A1BC98] text-[#3E3F29] font-medium">
-                            {{ $bookings }}
+                            {{ $coordinator->bookings_count ?? 0 }}
                         </span>
                     </td>
                 </tr>
-                @endforeach
+                @empty
+                <tr>
+                    <td colspan="4" class="py-4 px-5 text-center text-gray-500">
+                        No coordinators found.
+                    </td>
+                </tr>
+                @endforelse
 
             </tbody>
         </table>
@@ -92,46 +86,13 @@
 <!-- ================= PRINT STYLES ================= -->
 <style>
 @media print {
-
-    /* Hide everything */
-    body * {
-        visibility: hidden;
-    }
-
-    /* Show only the table */
-    .print-area,
-    .print-area * {
-        visibility: visible;
-    }
-
-    .print-area {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        box-shadow: none !important;
-        border-radius: 0 !important;
-    }
-
-    table {
-        border-collapse: collapse;
-        width: 100%;
-        font-size: 12px;
-    }
-
-    th, td {
-        border: 1px solid #A1BC98 !important;
-        padding: 10px 14px !important;
-    }
-
-    th {
-        background: #A1BC98 !important;
-        color: #3E3F29 !important;
-        font-weight: 700 !important;
-    }
-
-    tr:hover {
-        background: transparent !important;
-    }
+    body * { visibility: hidden; }
+    .print-area, .print-area * { visibility: visible; }
+    .print-area { position: absolute; inset: 0; width: 100%; box-shadow: none !important; border-radius: 0 !important; }
+    table { border-collapse: collapse; width: 100%; font-size: 12px; }
+    th, td { border: 1px solid #A1BC98 !important; padding: 10px 14px !important; }
+    th { background: #A1BC98 !important; color: #3E3F29 !important; font-weight: 700 !important; }
+    tr:hover { background: transparent !important; }
 }
 </style>
 @endsection

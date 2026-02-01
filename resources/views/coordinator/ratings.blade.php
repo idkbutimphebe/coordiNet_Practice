@@ -4,7 +4,6 @@
 
 <div class="space-y-12">
 
-    <!-- HEADER -->
     <div class="flex items-end justify-between">
         <div>
             <h1 class="text-4xl font-extrabold text-[#2F3024] tracking-tight">
@@ -16,35 +15,38 @@
         </div>
     </div>
 
-    <!-- HERO RATING CARD -->
     <div class="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#778873] to-[#5E6F5A] shadow-2xl">
 
-        <!-- Glow -->
         <div class="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
 
         <div class="relative p-10 grid grid-cols-1 md:grid-cols-2 gap-10 items-center text-white">
 
-            <!-- LEFT -->
             <div>
                 <p class="uppercase tracking-widest text-xs opacity-80 mb-3">
                     Overall Rating
                 </p>
                 <div class="flex items-end gap-4">
                     <span class="text-7xl font-black leading-none">
-                        4.7
+                        {{ $formattedAvg }}
                     </span>
                     <div class="pb-2">
-                        <div class="text-2xl tracking-wide">
-                            ★★★★☆
+                        <div class="text-2xl tracking-wide text-yellow-400">
+                            @php $roundedAvg = round($formattedAvg); @endphp
+                            @for($i = 1; $i <= 5; $i++)
+                                @if($i <= $roundedAvg)
+                                    ★
+                                @else
+                                    <span class="text-white/30">★</span>
+                                @endif
+                            @endfor
                         </div>
                         <p class="text-xs opacity-80 mt-1">
-                            Average client satisfaction
+                            Average client satisfaction ({{ $totalReviews }} reviews)
                         </p>
                     </div>
                 </div>
             </div>
 
-            <!-- RIGHT -->
             <div class="space-y-4 text-sm opacity-90">
                 <p>
                     This rating reflects the overall experience of clients who have booked and completed events through the system.
@@ -57,7 +59,6 @@
         </div>
     </div>
 
-    <!-- FEEDBACK LIST -->
     <div class="space-y-6">
 
         <div class="flex items-center justify-between">
@@ -68,78 +69,53 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-            <!-- REVIEW CARD -->
-            <div class="rounded-2xl bg-white shadow-lg hover:shadow-xl transition p-6">
-                <div class="flex justify-between items-start mb-4">
-                    <div>
-                        <p class="font-semibold text-[#2F3024]">
-                            Maria Santos
-                        </p>
-                        <p class="text-xs text-gray-500">
-                            Wedding Event
-                        </p>
+            @forelse($reviews as $review)
+                <div class="rounded-2xl bg-white shadow-lg hover:shadow-xl transition p-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="font-semibold text-[#2F3024]">
+                                {{-- Client Name --}}
+                                {{ $review->client->first_name ?? 'Client' }} {{ $review->client->last_name ?? '' }}
+                            </p>
+                            <p class="text-xs text-gray-500">
+                                {{-- Event Type --}}
+                                {{ $review->booking->event_type ?? 'Event' }}
+                            </p>
+                        </div>
+                        <span class="text-xs text-gray-400">
+                            {{ $review->created_at->format('M d, Y') }}
+                        </span>
                     </div>
-                    <span class="text-xs text-gray-400">
-                        Dec 15, 2025
-                    </span>
-                </div>
 
-                <div class="text-yellow-400 text-sm mb-4">
-                    ★★★★★
-                </div>
-
-                <p class="text-sm text-gray-600 leading-relaxed">
-                    Everything was perfectly organized. The team exceeded our expectations from start to finish.
-                </p>
-            </div>
-
-            <div class="rounded-2xl bg-white shadow-lg hover:shadow-xl transition p-6">
-                <div class="flex justify-between items-start mb-4">
-                    <div>
-                        <p class="font-semibold text-[#2F3024]">
-                            John Reyes
-                        </p>
-                        <p class="text-xs text-gray-500">
-                            Birthday Event
-                        </p>
+                    <div class="text-yellow-400 text-sm mb-4">
+                        @for($i = 1; $i <= 5; $i++)
+                            @if($i <= $review->rating)
+                                ★
+                            @else
+                                <span class="text-gray-300">★</span>
+                            @endif
+                        @endfor
                     </div>
-                    <span class="text-xs text-gray-400">
-                        Dec 12, 2025
-                    </span>
+
+                    <p class="text-sm text-gray-600 leading-relaxed">
+                        {{ $review->feedback ?? 'No written feedback provided.' }}
+                    </p>
                 </div>
-
-                <div class="text-yellow-400 text-sm mb-4">
-                    ★★★★☆
-                </div>
-
-                <p class="text-sm text-gray-600 leading-relaxed">
-                    Smooth coordination and very accommodating staff. Would definitely book again.
-                </p>
-            </div>
-
-            <div class="rounded-2xl bg-white shadow-lg hover:shadow-xl transition p-6">
-                <div class="flex justify-between items-start mb-4">
-                    <div>
-                        <p class="font-semibold text-[#2F3024]">
-                            Anna Cruz
-                        </p>
-                        <p class="text-xs text-gray-500">
-                            Corporate Meeting
-                        </p>
+            @empty
+                <div class="col-span-1 lg:col-span-3 flex flex-col items-center justify-center py-16 px-6 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200 text-center">
+                    
+                    <div class="bg-white p-4 rounded-full shadow-sm mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-10 h-10 text-gray-400">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+                        </svg>
                     </div>
-                    <span class="text-xs text-gray-400">
-                        Dec 5, 2025
-                    </span>
-                </div>
 
-                <div class="text-yellow-400 text-sm mb-4">
-                    ★★★★☆
+                    <h3 class="text-lg font-medium text-gray-900">No reviews yet</h3>
+                    <p class="mt-1 text-sm text-gray-500 max-w-sm mx-auto">
+                        Once you complete your first booking, client feedback and ratings will appear here.
+                    </p>
                 </div>
-
-                <p class="text-sm text-gray-600 leading-relaxed">
-                    Professional handling and excellent time management throughout the event.
-                </p>
-            </div>
+            @endforelse
 
         </div>
 

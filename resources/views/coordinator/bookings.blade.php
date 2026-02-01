@@ -25,19 +25,24 @@
                 </svg>
             </span>
 
-            <input
-                type="text"
-                placeholder="Search bookings..."
-                class="w-full pl-10 pr-4 py-3 rounded-lg
-                       bg-white border border-[#A1BC98]
-                       text-sm text-[#3E3F29]
-                       placeholder-[#3E3F29]/60
-                       focus:outline-none focus:ring-2
-                       focus:ring-[#778873]"
-            >
+            <form method="GET" action="{{ route('coordinator.bookings') }}">
+                <input
+                    type="text"
+                    name="search"
+                    placeholder="Search bookings..."
+                    class="w-full pl-10 pr-4 py-3 rounded-lg
+                           bg-white border border-[#A1BC98]
+                           text-sm text-[#3E3F29]
+                           placeholder-[#3E3F29]/60
+                           focus:outline-none focus:ring-2
+                           focus:ring-[#778873]"
+                    value="{{ request('search') }}"
+                >
+            </form>
         </div>
 
         <button
+            onclick="document.querySelector('form').submit();"
             class="px-6 py-3 rounded-lg
                    bg-[#3E3F29] text-white
                    text-sm font-semibold
@@ -61,30 +66,37 @@
 
             <tbody class="divide-y divide-[#778873]/20">
 
-                @for ($i = 0; $i < 10; $i++)
+                @forelse($bookings as $booking)
                 <tr class="hover:bg-[#A1BC98]/20 transition">
                     <td class="py-4 px-6 font-medium text-[#3E3F29]">
-                        Jan Tirzuh Santos
+                        {{ $booking->client->user->name }}
                     </td>
                     <td class="py-4 px-6 text-gray-700">
-                        Wedding
+                        {{ $booking->event_name ?? 'N/A' }}
                     </td>
                     <td class="py-4 px-6">
                         <span class="inline-block px-3 py-1 text-xs rounded-full
-                                     bg-[#A1BC98] text-[#3E3F29] font-medium">
-                            Pending
+                                     {{ $booking->status == 'pending' ? 'bg-[#A1BC98]' : ($booking->status == 'approved' ? 'bg-[#3E3F29] text-white' : 'bg-red-600 text-white') }}
+                                     text-[#3E3F29] font-medium">
+                            {{ ucfirst($booking->status) }}
                         </span>
                     </td>
                     <td class="py-4 px-6 text-center">
-                        <a href="{{ route('coordinator.bookings.show', 1) }}"
-                        class="inline-block px-4 py-2 text-xs rounded-lg
-                                bg-[#778873] text-white
-                                hover:bg-[#3E3F29] transition">
+                        <a href="{{ route('coordinator.bookings.show', $booking->id) }}"
+                           class="inline-block px-4 py-2 text-xs rounded-lg
+                                  bg-[#778873] text-white
+                                  hover:bg-[#3E3F29] transition">
                             View
                         </a>
                     </td>
-
-                @endfor
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="4" class="text-center py-12 text-[#3E3F29]">
+                        No bookings found.
+                    </td>
+                </tr>
+                @endforelse
 
             </tbody>
         </table>
@@ -93,13 +105,7 @@
 
     <!-- PAGINATION -->
     <div class="py-6 flex justify-center">
-        <nav class="flex items-center gap-2 text-sm">
-            <button class="px-3 py-2 rounded bg-[#778873] text-white opacity-40" disabled>‹</button>
-            <button class="px-4 py-2 rounded bg-[#3E3F29] text-white font-medium">1</button>
-            <button class="px-4 py-2 rounded bg-[#A1BC98] text-[#3E3F29] hover:bg-[#778873] hover:text-white">2</button>
-            <button class="px-4 py-2 rounded bg-[#A1BC98] text-[#3E3F29] hover:bg-[#778873] hover:text-white">3</button>
-            <button class="px-3 py-2 rounded bg-[#778873] text-white">›</button>
-        </nav>
+        {{ $bookings->links() }}
     </div>
 
 </div>

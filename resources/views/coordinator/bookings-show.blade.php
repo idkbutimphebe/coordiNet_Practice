@@ -29,12 +29,12 @@
                     <div class="w-14 h-14 rounded-full bg-[#A1BC98]/60
                                 flex items-center justify-center
                                 text-[#3E3F29] font-bold text-lg">
-                        JS
+                        {{ strtoupper(substr($booking->client->user->name,0,1)) }}
                     </div>
 
                     <div>
                         <h2 class="text-xl font-semibold text-[#3E3F29]">
-                            Jan Tirzuh Santos
+                            {{ $booking->client->user->name }}
                         </h2>
                         <p class="text-sm text-[#778873]">
                             Booking Request
@@ -43,9 +43,11 @@
 
                     <!-- STATUS -->
                     <span class="ml-auto px-4 py-1.5 text-xs rounded-full
-                                 bg-[#A1BC98] text-[#3E3F29]
-                                 font-semibold shadow-sm">
-                        Pending
+                                 {{ $booking->status === 'pending' ? 'bg-[#A1BC98]' : '' }}
+                                 {{ $booking->status === 'approved' ? 'bg-green-200' : '' }}
+                                 {{ $booking->status === 'rejected' ? 'bg-red-200' : '' }}
+                                 text-[#3E3F29] font-semibold shadow-sm">
+                        {{ ucfirst($booking->status) }}
                     </span>
                 </div>
 
@@ -57,7 +59,7 @@
                             Event Requested
                         </p>
                         <p class="mt-1 font-semibold text-[#3E3F29]">
-                            Proposal Booking
+                            {{ $booking->event->name ?? 'N/A' }}
                         </p>
                     </div>
 
@@ -66,7 +68,7 @@
                             Requested Date
                         </p>
                         <p class="mt-1 font-semibold text-[#3E3F29]">
-                            March 13, 2025
+                            {{ \Carbon\Carbon::parse($booking->booking_date)->format('F d, Y') }}
                         </p>
                     </div>
 
@@ -75,7 +77,7 @@
                             Coordinator
                         </p>
                         <p class="mt-1 font-semibold text-[#3E3F29]">
-                            Not Assigned
+                            {{ $booking->coordinator->user->name ?? 'Not Assigned' }}
                         </p>
                     </div>
 
@@ -84,7 +86,7 @@
                             Request ID
                         </p>
                         <p class="mt-1 font-semibold text-[#3E3F29]">
-                            #BK-2025-0313
+                            #BK-{{ $booking->id }}
                         </p>
                     </div>
 
@@ -101,19 +103,27 @@
                         Back
                     </a>
 
-                    <button
-                        class="px-5 py-2 rounded-lg text-sm
-                               bg-[#3E3F29] text-white
-                               hover:opacity-90 transition">
-                        Approve
-                    </button>
+                    @if($booking->status === 'pending')
+                    <form method="POST" action="{{ route('coordinator.bookings.approve', $booking) }}">
+                        @csrf
+                        <button
+                            class="px-5 py-2 rounded-lg text-sm
+                                   bg-[#3E3F29] text-white
+                                   hover:opacity-90 transition">
+                            Approve
+                        </button>
+                    </form>
 
-                    <button
-                        class="px-5 py-2 rounded-lg text-sm
-                               bg-red-600 text-white
-                               hover:bg-red-700 transition">
-                        Reject
-                    </button>
+                    <form method="POST" action="{{ route('coordinator.bookings.reject', $booking) }}">
+                        @csrf
+                        <button
+                            class="px-5 py-2 rounded-lg text-sm
+                                   bg-red-600 text-white
+                                   hover:bg-red-700 transition">
+                            Reject
+                        </button>
+                    </form>
+                    @endif
 
                 </div>
 
