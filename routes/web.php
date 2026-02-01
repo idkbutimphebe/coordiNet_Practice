@@ -6,6 +6,7 @@ use App\Http\Controllers\CoordinatorController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\Coordinator\PaymentController;
 use App\Http\Controllers\RatingController;
+use App\Http\Controllers\ClientDashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,17 +41,17 @@ Route::middleware('auth')->get('/dashboard', function () {
 | BOOKINGS (ADMIN)
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth')->group(function () {
+// Route::middleware('auth')->group(function () {
 
-    Route::get('/bookings', fn () =>
-        view('bookings.index')
-    )->name('bookings');
+//     // Route::get('/bookings', fn () =>
+//     //     view('bookings.index')
+//     // )->name('bookings');
 
-    Route::get('/bookings/{id}', fn ($id) =>
-        view('bookings.show', compact('id'))
-    )->name('bookings.show');
+//     // Route::get('/bookings/{id}', fn ($id) =>
+//     //     view('bookings.show', compact('id'))
+//     // )->name('bookings.show');
 
-});
+// });
 
 /*
 |--------------------------------------------------------------------------
@@ -137,9 +138,9 @@ Route::middleware('auth')
             view('coordinator.dashboard')
         )->name('dashboard');
 
-        Route::get('/bookings', fn () =>
-            view('coordinator.bookings')
-        )->name('bookings');
+        Route::get('/bookings', [CoordinatorController::class, 'bookings'])
+        ->name('bookings');
+
 
         Route::get('/bookings/{id}', fn ($id) =>
             view('coordinator.bookings-show')
@@ -182,36 +183,35 @@ Route::middleware('auth')
     ->name('client.')
     ->group(function () {
 
-        Route::get('/dashboard', fn () =>
-            view('client.dashboard')
-        )->name('dashboard');
+        // Dashboard
+        Route::get('/dashboard', [ClientDashboardController::class, 'dashboard'])
+            ->name('dashboard');
 
-        Route::get('/coordinators', fn () =>
-            view('client.coordinators')
-        )->name('coordinators');
+        // Coordinators
+        Route::get('/coordinators', [ClientDashboardController::class, 'coordinatorsPage'])
+            ->name('coordinators');
 
-        Route::get('/coordinators/{name}', fn ($name) =>
-            view('client.coordinator-view', compact('name'))
-        )->name('coordinators.view');
+        Route::get('/coordinators/{coordinator}', [CoordinatorController::class, 'showForClient'])
+            ->name('coordinators.profile');
 
-        Route::get('/bookings', fn () =>
-            view('client.booking.index')
-        )->name('bookings.index');
+        Route::post('/coordinators/{coordinator}/book', [ClientDashboardController::class, 'bookCoordinator'])
+            ->name('coordinators.book');
 
-        Route::get('/bookings/{id}', fn ($id) =>
-            view('client.booking.show', compact('id'))
-        )->name('bookings.show');
+        // Bookings
+        Route::get('/bookings', [ClientDashboardController::class, 'myBookings'])
+            ->name('bookings.index'); // group prefix 'client.' + 'bookings.index' = client.bookings.index
 
-        Route::get('/ratings', fn () =>
-            view('client.ratings')
-        )->name('ratings');
 
+
+        // Ratings
+        Route::get('/ratings', fn () => view('client.ratings'))
+            ->name('ratings');
         Route::post('/ratings', [RatingController::class, 'store'])
             ->name('ratings.store');
 
-        Route::get('/profile', fn () =>
-            view('client.profile')
-        )->name('profile');
+        // Profile
+        Route::get('/profile', fn () => view('client.profile'))
+            ->name('profile');
     });
 
 require __DIR__ . '/auth.php';

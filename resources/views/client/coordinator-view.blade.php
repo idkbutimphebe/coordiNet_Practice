@@ -25,12 +25,14 @@
 
             <div class="flex-1">
                 <h1 class="text-2xl font-extrabold text-[#3E3F29]">
-                    Juan Dela Cruz
+                    {{ $coordinator->business_name }}
                 </h1>
 
                 <p class="text-sm text-gray-600">
-                    Birthday & Wedding Event Coordinator
+                    {{ $coordinator->expertise }}
                 </p>
+
+
 
                 <!-- RATING -->
                 <div class="flex items-center gap-2 mt-2">
@@ -79,12 +81,10 @@
                 About the Coordinator
             </h2>
 
-            <p class="text-sm text-gray-600 leading-relaxed">
-                Professional event coordinator with over 3 years of experience
-                handling weddings, birthdays, and corporate events. Known for
-                attention to detail, strong vendor coordination, and smooth
-                event execution from planning to post-event wrap-up.
-            </p>
+        <p class="text-sm text-gray-600 leading-relaxed">
+            {{ $coordinator->bio ?? 'No description provided.' }}
+        </p>
+
         </div>
 
         <!-- ================= CLIENT REVIEWS ================= -->
@@ -168,7 +168,10 @@
         <div class="bg-[#7E8F78] rounded-3xl p-6 text-white shadow-sm">
             <h2 class="font-semibold mb-3">Pricing</h2>
 
-            <p class="text-4xl font-extrabold">₱5,000</p>
+            <p class="text-4xl font-extrabold">
+                ₱{{ number_format($coordinator->price, 2) }}
+            </p>
+
             <p class="text-sm mb-5 opacity-90">per event</p>
 
             <ul class="space-y-2 text-sm">

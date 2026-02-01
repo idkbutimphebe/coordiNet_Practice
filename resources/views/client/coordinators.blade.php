@@ -58,7 +58,7 @@
                            bg-white rounded-xl shadow-xl
                            border border-gray-100 z-20">
 
-                    <!-- WEDDING (MOST CUSTOMERS - FIRST) -->
+                    <!-- WEDDING -->
                     <label class="flex items-center gap-3 px-4 py-3 text-sm
                                   hover:bg-[#F6F8F5] cursor-pointer rounded-t-xl">
                         <input type="radio" name="event_type" value="wedding"
@@ -107,7 +107,6 @@
     </div>
 </div>
 
-<!-- SMALL SCRIPT -->
 <script>
     function selectFilter(label) {
         document.getElementById('filterLabel').innerText = label;
@@ -115,97 +114,59 @@
     }
 </script>
 
+<!-- COORDINATOR GRID -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
+@foreach($coordinators as $coord)
+<div class="bg-white rounded-2xl p-5 border shadow-sm">
 
-    @php
-        $coordinators = [
-            ['JD','Juan Dela Cruz', 'Birthday', '4.8', 'Available'],
-            ['AM','April Martinez', 'Birthday', '4.6', 'Available'],
-            ['MK','Mark Kevin', 'Birthday', '4.5', 'Busy'],
-
-            ['LS','Lara Santos', 'Wedding', '4.9', 'Available'],
-            ['RT','Ryan Torres', 'Wedding', '4.7', 'Available'],
-            ['CP','Carla Perez', 'Wedding', '4.6', 'Busy'],
-
-            ['JN','Joshua Nunez', 'Others', '4.4', 'Available'],
-            ['MB','Maria Bello', 'Others', '4.5', 'Available'],
-            ['AL','Alex Lim', 'Others', '4.3', 'Busy'],
-        ];
-    @endphp
-
-    <!-- COORDINATOR GRID -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-        @foreach($coordinators as [$initials, $name, $type, $rating, $status])
-
-        <div class="bg-white rounded-2xl p-5
-                    border border-[#A1BC98]/40
-                    shadow-sm hover:shadow-xl
-                    transition-all hover:-translate-y-1">
-
-            <!-- HEADER -->
-            <div class="flex items-center justify-between">
-
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-xl
-                                bg-[#A1BC98]
-                                flex items-center justify-center
-                                font-bold text-[#3E3F29]">
-                        {{ $initials }}
-                    </div>
-
-                    <div>
-                        <p class="font-semibold text-[#3E3F29]">
-                            {{ $name }}
-                        </p>
-                        <p class="text-xs text-gray-500">
-                            ⭐ {{ $rating }} rating
-                        </p>
-                    </div>
-                </div>
-
-                <!-- EVENT TAG -->
-                <span class="px-3 py-1 text-xs rounded-full
-                             bg-[#778873]/15 text-[#3E3F29]
-                             font-semibold">
-                    {{ $type }}
-                </span>
-            </div>
-
-            <!-- STATUS -->
-            <div class="mt-4 text-sm">
-                Status:
-                <span class="font-medium
-                    {{ $status === 'Available' ? 'text-green-600' : 'text-red-500' }}">
-                    {{ $status }}
-                </span>
-            </div>
-
-            <!-- ACTIONS -->
-            <div class="mt-5 flex gap-3">
-                <a href="{{ route('client.coordinators.view', $name) }}"
-                   class="flex-1 text-center py-2 rounded-lg
-                          border border-[#778873]
-                          text-[#778873]
-                          text-sm font-medium
-                          hover:bg-[#778873]/10 transition">
-                    View
-                </a>
-
-                <a href="{{ route('client.bookings.index') }}"
-                   class="flex-1 text-center py-2 rounded-lg
-                          bg-[#3E3F29] text-white
-                          text-sm font-semibold
-                          hover:opacity-90 transition">
-                    Book
-                </a>
-            </div>
-
+    <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-[#A1BC98]
+                    flex items-center justify-center font-bold">
+            {{ strtoupper(substr($coord->business_name ?? 'NA', 0, 2)) }}
         </div>
 
-        @endforeach
-
+        <div>
+            <p class="font-semibold">
+                {{ $coord->business_name ?? 'No Business Name' }}
+            </p>
+            <p class="text-xs text-gray-500">
+                ({{ $coord->reviews_count ?? 0 }} reviews)
+            </p>
+        </div>
     </div>
 
+    <div class="mt-3 text-sm">
+        Status:
+        @php
+            // ✅ Ensure $coord is always treated as Eloquent model
+            $verified = $coord instanceof \Illuminate\Database\Eloquent\Model
+                ? $coord->is_verified
+                : ($coord['is_verified'] ?? false);
+        @endphp
+        <span class="{{ $verified ? 'text-green-600' : 'text-red-500' }}">
+            {{ $verified ? 'Available' : 'Unavailable' }}
+        </span>
+    </div>
+
+    <div class="mt-4 flex gap-3">
+        <a href="{{ route('client.coordinators.profile', $coord->id) }}"
+           class="flex-1 text-center py-2 border rounded">
+            View
+        </a>
+
+         <form action="{{ route('client.coordinators.book', $coord->id) }}" method="POST" class="flex-1">
+        @csrf
+        <button type="submit"
+                class="w-full py-2 bg-black text-white rounded">
+            Book
+        </button>
+    </form>
+    </div>
+
+</div>
+@endforeach
+
+</div>
 </div>
 @endsection

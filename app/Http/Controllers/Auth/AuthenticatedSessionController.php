@@ -22,47 +22,34 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
-    {
-        $request->authenticate();
-        $request->session()->regenerate();
+public function store(LoginRequest $request): RedirectResponse
+{
+    $request->authenticate();
+    $request->session()->regenerate();
 
-        $user = Auth::user();
+    $user = Auth::user();
 
-        // ================= ROLE-BASED REDIRECT =================
+    // ================= ROLE-BASED REDIRECT =================
 
-        // ADMIN → /dashboard
-        if ($user->role === 'admin') {
-<<<<<<< Updated upstream
-            return redirect()->route('dashboard');
-        }
-
-        // COORDINATOR → /coordinator/dashboard
-        if ($user->role === 'coordinator') {
-            return redirect()->route('coordinator.dashboard');
-        }
-
-        // CLIENT → /client/dashboard
-        if ($user->role === 'client') {
-            return redirect()->route('client.dashboard');
-        }
-
-        // Fallback (safety)
-        Auth::logout();
-        return redirect('/login');
-=======
-            return redirect()->intended(route('dashboard'));
-        } 
-        
-        if ($user->role === 'coordinator') {
-            return redirect()->intended(route('coordinator.dashboard'));
-        }
-
-        // Default for clients
-        return redirect()->intended(route('client.dashboard'));
-        // --- CUSTOM ROLE-BASED REDIRECT END ---
->>>>>>> Stashed changes
+    // ADMIN → /dashboard
+    if ($user && $user->role === 'admin') {
+        return redirect()->route('dashboard');
     }
+
+    // COORDINATOR → /coordinator/dashboard
+    if ($user && $user->role === 'coordinator') {
+        return redirect()->route('coordinator.dashboard');
+    }
+
+    // CLIENT → /client/dashboard
+    if ($user && $user->role === 'client') {
+        return redirect()->route('client.dashboard');
+    }
+
+    // Fallback (safety)
+    Auth::logout();
+    return redirect('/login');
+}
 
     /**
      * Destroy an authenticated session.
@@ -72,6 +59,7 @@ class AuthenticatedSessionController extends Controller
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
+
         $request->session()->regenerateToken();
 
         return redirect('/');

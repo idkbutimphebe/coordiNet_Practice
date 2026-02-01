@@ -60,45 +60,75 @@
 
             <tbody class="divide-y divide-[#A1BC98]/40">
 
-                @php
-                    $bookings = [
-                        ['id' => 1, 'event' => 'Wedding', 'date' => 'Dec 15, 2025', 'coordinator' => 'Juan Dela Cruz', 'status' => 'Completed'],
-                        ['id' => 2, 'event' => 'Birthday', 'date' => 'Jan 10, 2026', 'coordinator' => 'Maria Santos', 'status' => 'Pending'],
-                        ['id' => 3, 'event' => 'Corporate', 'date' => 'Feb 02, 2026', 'coordinator' => 'Alex Lim', 'status' => 'Cancelled'],
-                    ];
-                @endphp
+                <!-- sample bookings (kept for reference)
+                    @php
+                        // Example static data — no effect when $bookings is provided by controller
+                        $sampleBookings = [
+                            ['id' => 1, 'event' => 'Wedding', 'date' => 'Dec 15, 2025', 'coordinator' => 'Juan Dela Cruz', 'status' => 'Completed'],
+                            ['id' => 2, 'event' => 'Birthday', 'date' => 'Jan 10, 2026', 'coordinator' => 'Maria Santos', 'status' => 'Pending'],
+                            ['id' => 3, 'event' => 'Corporate', 'date' => 'Feb 02, 2026', 'coordinator' => 'Alex Lim', 'status' => 'Cancelled'],
+                        ];
+                    @endphp -->
 
-                @foreach($bookings as $booking)
+@php $bookings = collect($bookings ?? []); @endphp
+@foreach($bookings as $booking)
                 <tr class="hover:bg-[#F6F8F5] transition">
+                    <!-- EVENT NAME -->
                     <td class="py-4 px-6 font-medium text-[#3E3F29]">
-                        {{ $booking['event'] }}
+                        {{ data_get($booking, 'eventInfo.title') ?? data_get($booking, 'event') ?? 'N/A' }}
+
+
+                        <!-- SERVICES LIST -->
+                        @php $services = collect(data_get($booking, 'services', [])); @endphp
+                        @if($services->count())
+    <ul class="text-xs text-gray-500 mt-1">
+        @foreach($services as $service)
+            <li>
+                {{ data_get($service, 'service_name') }} -
+                ₱{{ number_format((float) data_get($service, 'pivot.price', data_get($service, 'price', 0)), 2) }}
+            </li>
+        @endforeach
+    </ul>
+@endif
                     </td>
 
+                    <!-- CREATED DATE -->
                     <td class="py-4 px-6 text-gray-600">
-                        {{ $booking['date'] }}
+                        @php
+                            $created = data_get($booking, 'created_at');
+                            try {
+                                $createdFormatted = $created ? \Carbon\Carbon::parse($created)->format('M d, Y') : 'N/A';
+                            } catch (\Exception $e) {
+                                $createdFormatted = 'N/A';
+                            }
+                        @endphp
+                        {{ $createdFormatted }}
                     </td>
 
+                    <!-- COORDINATOR NAME -->
                     <td class="py-4 px-6 text-gray-700">
-                        {{ $booking['coordinator'] }}
+                        {{ data_get($booking, 'coordinator.name') ?? data_get($booking, 'coordinator') ?? 'N/A' }}
                     </td>
 
-                    <!-- ✅ FIXED UNIFORM STATUS COLORS -->
+                    <!-- STATUS -->
                     <td class="py-4 px-6">
+                        @php $status = data_get($booking, 'status'); @endphp
                         <span class="inline-flex items-center px-4 py-1.5
                             rounded-full text-xs font-semibold
-                            @if($booking['status'] === 'Completed')
+                            @if($status === 'Completed')
                                 bg-[#A1BC98] text-[#3E3F29]
-                            @elseif($booking['status'] === 'Cancelled')
+                            @elseif($status === 'Cancelled')
                                 bg-[#A1BC98]/40 text-[#3E3F29]
                             @else
                                 bg-[#A1BC98]/20 text-[#3E3F29]
                             @endif">
-                            {{ $booking['status'] }}
+                            {{ $status ?? 'N/A' }}
                         </span>
                     </td>
 
+                    <!-- VIEW BUTTON -->
                     <td class="py-4 px-6 text-center">
-                        <a href="{{ route('client.bookings.show', $booking['id']) }}"
+                        <a href="{{ route('client.bookings.show', data_get($booking, 'id')) }}"
                            class="inline-block px-5 py-1.5 rounded-lg
                                   bg-[#778873] text-white
                                   text-xs font-medium

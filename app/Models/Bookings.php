@@ -5,17 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Bookings extends Model
 {
     protected $fillable = [
-        'client_id',
-        'coordinator_id',
-        'event_id',
-        'booking_date',
+        'name',
+        'event',
         'status',
-        'total_price'
     ];
+
 
     public function client():BelongsTo
     {
@@ -25,10 +24,18 @@ class Bookings extends Model
     {
         return $this->belongsTo(CoordinatorsInfo::class, 'coordinator_id');
     }
-    public function event():BelongsTo
+        public function bookingServices(): HasMany
     {
-        return $this->belongsTo(Event::class);
+        return $this->hasMany(BookingServices::class, 'booking_id');
     }
+
+    /**
+     * Optional review (if reviews table exists with booking_id)
+     */
+    public function eventInfo(): BelongsTo
+{
+    return $this->belongsTo(Event::class, 'event_id');
+}
      public function services()
     {
         return $this->belongsToMany(
@@ -38,9 +45,9 @@ class Bookings extends Model
             'service_id'
         )->withPivot('price')->withTimestamps();
     }
-    public function reveiw():HasOne
+    public function review(): HasOne
     {
-        return $this->hasOne(Reviews::class);
+        return $this->hasOne(Reviews::class, 'booking_id');
     }
 
 }
