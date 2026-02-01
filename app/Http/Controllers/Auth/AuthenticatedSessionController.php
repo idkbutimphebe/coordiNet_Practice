@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use Illuminate\Validation\ValidationException;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -23,33 +24,44 @@ class AuthenticatedSessionController extends Controller
      * Handle an incoming authentication request.
      */
     public function store(LoginRequest $request): RedirectResponse
-    {
-        $request->authenticate();
-        $request->session()->regenerate();
+{
+    // Authenticate user
+    $request->authenticate();
+    $request->session()->regenerate();
 
-        $user = Auth::user();
+    $user = Auth::user();
 
-        // ================= ROLE-BASED REDIRECT =================
-
-        // ADMIN → /dashboard
-        if ($user->role === 'admin') {
-            return redirect()->route('dashboard');
-        }
-
-        // COORDINATOR → /coordinator/dashboard
-        if ($user->role === 'coordinator') {
-            return redirect()->route('coordinator.dashboard');
-        }
-
-        // CLIENT → /client/dashboard
-        if ($user->role === 'client') {
-            return redirect()->route('client.dashboard');
-        }
-
-        // Fallback (safety)
+    // Restrict coordinator if not approved
+    if ($user->role === 'coordinator' && $user->status !== 'approved') {
         Auth::logout();
-        return redirect('/login');
+
+        $message = $user->status === 'pending'
+            ? 'You cannot log in yet. Please wait until you receive approval from admin.'
+            : 'Your registration has been rejected. Contact admin for details.';
+
+        throw ValidationException::withMessages([
+            'email' => [$message],
+        ]);
     }
+
+    // Redirect based on role
+    if ($user->role === 'admin') {
+        return redirect()->route('admin.dashboard');
+    }
+
+    if ($user->role === 'client') {
+        return redirect()->route('client.dashboard');
+    }
+
+    if ($user->role === 'coordinator') {
+        return redirect()->route('coordinator.dashboard');
+    }
+
+    // Fallback safety
+    Auth::logout();
+    return redirect('/login');
+}
+
 
     /**
      * Destroy an authenticated session.
@@ -63,4 +75,5 @@ class AuthenticatedSessionController extends Controller
 
         return redirect('/');
     }
+    
 }
