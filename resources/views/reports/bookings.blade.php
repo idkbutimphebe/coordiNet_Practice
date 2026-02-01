@@ -13,7 +13,7 @@
                 Complete list of all bookings
             </p>
         </div>
-     
+
         <div class="flex items-center gap-3">
             <a href="{{ route('dashboard') }}"
                class="px-4 py-2 text-sm rounded-lg
@@ -33,7 +33,7 @@
     </div>
 
     <!-- ================= TABLE CARD ================= -->
-    <div class="bg-white rounded-2xl shadow-sm overflow-hidden print:shadow-none print-only">
+    <div class="bg-white rounded-2xl shadow-sm overflow-hidden print:shadow-none">
 
         <table class="w-full text-sm text-left">
             <thead class="bg-[#A1BC98]/40 text-[#3E3F29]">
@@ -48,41 +48,44 @@
             </thead>
 
             <tbody class="divide-y divide-[#778873]/20">
-                @php
-                    $bookings = [
-                        ['1','Jan Tirzuh Santos','Birthday','Juan Dela Cruz','Mar 10, 2025','Approved'],
-                        ['2','Maria Lopez','Wedding','April Martinez','Apr 18, 2025','Approved'],
-                        ['3','John Reyes','Birthday','Mark Kevin','May 02, 2025','Pending'],
-                        ['4','Anna Cruz','Wedding','Lara Santos','May 21, 2025','Approved'],
-                        ['5','Kevin Ramos','Others','Ryan Torres','Jun 08, 2025','Approved'],
-                    ];
-                @endphp
-
-                @foreach($bookings as [$id, $client, $event, $coordinator, $schedule, $status])
+                @forelse($bookings as $booking)
                 <tr class="hover:bg-[#A1BC98]/20 transition print:hover:bg-transparent">
-                    <td class="py-3 px-5 font-bold text-[#3E3F29]">{{ $id }}</td>
-                    <td class="py-3 px-5 text-[#3E3F29]">{{ $client }}</td>
-                    <td class="py-3 px-5 text-gray-700">{{ $event }}</td>
-                    <td class="py-3 px-5 text-gray-700">{{ $coordinator }}</td>
-                    <td class="py-3 px-5 text-gray-700">{{ $schedule }}</td>
+                    <td class="py-3 px-5 font-bold text-[#3E3F29]">{{ $booking->id }}</td>
+                    <td class="py-3 px-5 text-[#3E3F29]">{{ $booking->client->name ?? 'N/A' }}</td>
+                    <td class="py-3 px-5 text-gray-700">{{ $booking->event->name ?? 'N/A' }}</td>
+                    <td class="py-3 px-5 text-gray-700">{{ $booking->event->coordinator->coordinator_name ?? 'N/A' }}</td>
+                    <td class="py-3 px-5 text-gray-700">{{ \Carbon\Carbon::parse($booking->booking_date)->format('M d, Y') }}</td>
                     <td class="py-3 px-5">
                         <span class="inline-block px-3 py-1 text-xs rounded-full
-                            {{ $status === 'Approved'
+                            {{ $booking->status === 'approved'
                                 ? 'bg-[#A1BC98] text-[#3E3F29]'
-                                : 'bg-yellow-200 text-yellow-800' }}">
-                            {{ $status }}
+                                : ($booking->status === 'pending' ? 'bg-yellow-200 text-yellow-800' : 'bg-red-200 text-red-800') }}">
+                            {{ ucfirst($booking->status) }}
                         </span>
                     </td>
                 </tr>
-                @endforeach
+                @empty
+                <tr>
+                    <td colspan="6" class="py-4 px-5 text-center text-gray-500">
+                        No bookings found.
+                    </td>
+                </tr>
+                @endforelse
             </tbody>
         </table>
 
     </div>
 
+    <!-- PAGINATION -->
+    <div class="mt-6 py-4 no-print">
+        <div class="flex justify-center">
+            {{ $bookings->links() }}
+        </div>
+    </div>
+
 </div>
 
-<!-- ================= PRINT RULES (SAME AS YOUR WORKING ONES) ================= -->
+<!-- ================= PRINT RULES ================= -->
 <style>
 @media print {
 

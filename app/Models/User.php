@@ -23,6 +23,16 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        // Added Coordinator Fields:
+        'title',
+        'phone',
+        'location',
+        'bio',
+        'rate',
+        'is_active',
+        'services',
+        'portfolio',
+        'avatar',
     ];
 
     /**
@@ -45,17 +55,27 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'services' => 'array',   // Cast JSON to Array
+            'portfolio' => 'array',  // Cast JSON to Array
+            'is_active' => 'boolean',
+            'rate' => 'decimal:2',
         ];
     }
-    public function clientinfo():HasOne
+
+    // ================= RELATIONSHIPS =================
+
+    public function clientinfo(): HasOne
     {
-        return $this->hasOne(clientinfo::class);
+        // Ensure the model name matches your file (e.g., ClientInfo::class)
+        return $this->hasOne(ClientInfo::class); 
     }
-    public function coordinatorsinfo():HasOne
+
+    public function coordinatorsinfo(): HasOne
     {
         return $this->hasOne(CoordinatorsInfo::class);
     }
-    public function notifications():HasOne
+
+    public function notifications(): HasOne
     {
         return $this->hasOne(Notifications::class);
     }

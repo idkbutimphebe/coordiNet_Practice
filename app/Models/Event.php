@@ -13,7 +13,6 @@ class Event extends Model
         'event_name',
         'event_type',
         'description',
-        'base_price'
     ];
 
     public function coordinator():BelongsTo
@@ -22,6 +21,6 @@ class Event extends Model
     }
     public function bookings():HasMany
     {
-        return $this->hasMany(Bookings::class);
+        return $this->hasMany(Booking::class);
     }
 }

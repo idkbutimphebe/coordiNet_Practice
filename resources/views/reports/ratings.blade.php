@@ -14,7 +14,6 @@
             </p>
         </div>
 
-
         <div class="flex items-center gap-3">
             <a href="{{ route('dashboard') }}"
                class="px-4 py-2 text-sm rounded-lg
@@ -47,32 +46,41 @@
                     <th class="py-3 px-5 font-semibold">Feedback</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-[#778873]/20">
-                @php
-                    $ratings = [
-                        ['1','Jan Tirzuh Santos','Birthday','Juan Dela Cruz','5⭐','Great service, very professional!'],
-                        ['2','Maria Lopez','Wedding','April Martinez','4.8⭐','Everything went smoothly.'],
-                        ['3','John Reyes','Birthday','Mark Kevin','4.5⭐','Coordinator was very helpful.'],
-                        ['4','Anna Cruz','Wedding','Lara Santos','5⭐','Perfectly organized!'],
-                        ['5','Kevin Ramos','Others','Ryan Torres','4.7⭐','Good experience overall.'],
-                        ['6','Ella Gomez','Wedding','Paulo Reyes','4.9⭐','Highly recommend!'],
-                        ['7','Chris Mendoza','Birthday','Leo Navarro','4.6⭐','Everything went well.'],
-                        ['8','Sofia Lim','Others','Kurt Valdez','4.8⭐','Coordinator was attentive.'],
-                        ['9','Mark Dizon','Birthday','Neil Ramos','5⭐','Exceeded expectations!'],
-                        ['10','Paula Reyes','Wedding','Ivy Santos','4.7⭐','Very satisfied.'],
-                    ];
-                @endphp
 
-                @foreach($ratings as [$id, $client, $event, $coordinator, $rating, $feedback])
-                <tr class="hover:bg-[#A1BC98]/20 transition print:hover:bg-transparent">
-                    <td class="py-3 px-5 font-bold text-[#3E3F29]">{{ $id }}</td>
-                    <td class="py-3 px-5 text-[#3E3F29]">{{ $client }}</td>
-                    <td class="py-3 px-5 text-[#3E3F29]">{{ $event }}</td>
-                    <td class="py-3 px-5 text-[#3E3F29]">{{ $coordinator }}</td>
-                    <td class="py-3 px-5 font-bold text-[#3E3F29]">{{ $rating }}</td>
-                    <td class="py-3 px-5 text-[#3E3F29]">{{ $feedback }}</td>
-                </tr>
-                @endforeach
+            <tbody class="divide-y divide-[#778873]/20">
+                @forelse ($ratings as $index => $booking)
+                    <tr class="hover:bg-[#A1BC98]/20 transition print:hover:bg-transparent">
+                        <td class="py-3 px-5 font-bold text-[#3E3F29]">
+                            {{ $index + 1 }}
+                        </td>
+
+                        <td class="py-3 px-5 text-[#3E3F29]">
+                            {{ $booking->client->name ?? '-' }}
+                        </td>
+
+                        <td class="py-3 px-5 text-[#3E3F29]">
+                            {{ $booking->event->event_name ?? '-' }}
+                        </td>
+
+                        <td class="py-3 px-5 text-[#3E3F29]">
+                            {{ $booking->coordinator->coordinator_name ?? '-' }}
+                        </td>
+
+                        <td class="py-3 px-5 font-bold text-[#3E3F29]">
+                            {{ $booking->rating ? $booking->rating . ' ⭐' : 'N/A' }}
+                        </td>
+
+                        <td class="py-3 px-5 text-[#3E3F29]">
+                            {{ $booking->feedback ?? 'No feedback' }}
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="6" class="py-4 px-5 text-center text-gray-500">
+                            No ratings found.
+                        </td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
 
@@ -83,7 +91,6 @@
 <!-- ================= PRINT STYLES ================= -->
 <style>
 @media print {
-
     .no-print {
         display: none !important;
     }
