@@ -2,6 +2,12 @@
 
 @section('content')
 
+@if(session('error'))
+    <div class="mb-6 p-4 rounded-xl bg-red-100 border border-red-300 text-red-800">
+        {{ session('error') }}
+    </div>
+@endif
+
 <!-- ================= GREETING ================= -->
 <div class="mb-8">
     <h2 class="text-3xl font-bold text-[#3E3F29]">
@@ -15,9 +21,9 @@
 @php
     $requests = $pendingBookings->map(function($booking) {
         return [
-            'name' => $booking->client->user->name,
+            'name' => $booking->client->name ?? 'Client',
             'type' => 'Booking',
-            'date' => \Carbon\Carbon::parse($booking->booking_date)->format('M d, Y'),
+            'date' => $booking->event_date?->format('M d, Y') ?? 'N/A',
         ];
     });
 @endphp

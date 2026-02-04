@@ -32,6 +32,7 @@ class User extends Authenticatable
         'rate',
         'is_active',
         'services',
+        'event_types',
         'portfolio',
         'avatar',
     ];
@@ -57,6 +58,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'services' => 'array',   // Cast JSON to Array
+            'event_types' => 'array', // Cast JSON to Array
             'portfolio' => 'array',  // Cast JSON to Array
             'is_active' => 'boolean',
             'rate' => 'decimal:2',

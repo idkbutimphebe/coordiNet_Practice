@@ -8,6 +8,16 @@
     </div>
 @endif
 
+@if($errors->any())
+    <div class="max-w-7xl mx-auto mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-xl">
+        <ul class="list-disc pl-5">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
 <form action="{{ route('coordinator.update') }}" method="POST" enctype="multipart/form-data">
     @csrf
     @method('PUT')
@@ -126,11 +136,8 @@
         // Available event types
         $availableEvents = ['Wedding', 'Birthday', 'Debut', 'Corporate', 'Anniversary', 'Baby Shower', 'Graduation', 'Engagement'];
 
-        // Get coordinator
-        $coordinator = auth()->user()->coordinator;
-
-        // Get existing events from database
-        $dbEvents = $coordinator && $coordinator->events ? $coordinator->events->pluck('event_type')->toArray() : [];
+        // Get existing event types from user profile (JSON column)
+        $dbEvents = is_array($user->event_types ?? null) ? ($user->event_types ?? []) : [];
 
         // Merge old input with database values
         $currentEvents = old('event_types', $dbEvents) ?? [];
@@ -155,6 +162,9 @@
     </div>
 
     <p class="text-xs text-gray-400 mt-2">Select the event types you handle. You can check multiple options.</p>
+    @error('event_types')
+        <p class="text-xs text-red-600 mt-2">{{ $message }}</p>
+    @enderror
 </div>
 
 

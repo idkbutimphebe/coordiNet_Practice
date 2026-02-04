@@ -3,6 +3,22 @@
 @section('content')
 <div class="space-y-8">
 
+    @if(session('success'))
+        <div class="p-4 text-green-700 bg-green-100 rounded-lg">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if($errors->any())
+        <div class="p-4 text-red-700 bg-red-100 rounded-lg">
+            <ul class="list-disc pl-5">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <!-- PAGE HEADER -->
     <div>
         <h1 class="text-3xl font-extrabold text-[#3E3F29] tracking-tight">
@@ -117,6 +133,7 @@
             </div>
         </div>
 <!-- BOOKING MODAL -->
+<!-- BOOKING MODAL -->
 <div id="bookingModal-{{ $coordinator->id }}" 
      class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center transition-opacity duration-300">
 
@@ -137,69 +154,98 @@
             Fill out the details below to schedule your event.
         </p>
 
-                 <!-- BOOKING FORM -->
-                <form method="POST" action="{{ route('client.bookings.store') }}" class="space-y-4">
-                    @csrf
+        <!-- BOOKING FORM -->
+        <form method="POST" action="{{ route('client.bookings.store') }}" class="space-y-4">
+            @csrf
 
-                    <input type="hidden" name="coordinator_id" value="{{ $coordinator->id }}">
+            <input type="hidden" name="coordinator_id" value="{{ $coordinator->id }}">
 
-                    <!-- Choose Event -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Choose Event Type</label>
-                        <select name="event_type
-                        _id" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#778873] focus:border-[#3E3F29]">
-                            <option value="">-- Select Event (Optional) --</option>
-                            @forelse($coordinator->eventType as $eventType)
-                            <option value="{{ $eventType->id }}" {{ $coordinator->event_type_id == $eventType->id ? 'selected' : '' }}>
-                                {{ $eventType->name }}
-                            </option>                            @empty
-                                <option value="" disabled>No events available</option>
-                            @endforelse
-                        </select>
-                    </div>
+            <!-- Choose Event Type -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Choose Event Type
+                </label>
 
-                    <!-- Event Name -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Event Name</label>
-                        <input type="text" name="event_name" placeholder="e.g. Birthday, Wedding, Debut" required
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#778873] focus:border-[#3E3F29]">
-                    </div>
+                @php
+                    $availableCoordinatorEventTypes = is_array($coordinator->event_types ?? null)
+                        ? ($coordinator->event_types ?? [])
+                        : [];
+                @endphp
 
-                    <!-- Event Date -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Event Date</label>
-                        <input type="date" name="event_date" required
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#778873] focus:border-[#3E3F29]">
-                    </div>
+                <select name="event_type" class="w-full px-4 py-2 border border-gray-300 rounded-lg
+                       focus:ring-2 focus:ring-[#778873] focus:border-[#3E3F29]">
+                    <option value="">-- Select Event (Optional) --</option>
 
-                    <!-- Time -->
-                    <div class="flex gap-4">
-                        <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
-                            <input type="time" name="start_time" required
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#778873] focus:border-[#3E3F29]">
-                        </div>
-                        <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">End Time</label>
-                            <input type="time" name="end_time" required
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#778873] focus:border-[#3E3F29]">
-                        </div>
-                    </div>
+                    @forelse($availableCoordinatorEventTypes as $eventType)
+                        <option value="{{ $eventType }}"
+                            {{ old('event_type') == $eventType ? 'selected' : '' }}>
+                            {{ $eventType }}
+                        </option>
+                    @empty
+                        <option value="" disabled>No event types available</option>
+                    @endforelse
+                </select>
 
-                    <!-- Notes -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                        <textarea name="note" rows="3" placeholder="Additional details..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#778873] focus:border-[#3E3F29]"></textarea>
-                    </div>
+                @error('event_type')
+                    <span class="text-red-500 text-xs">{{ $message }}</span>
+                @enderror
+            </div>
 
-                    <!-- Submit -->
-                    <button type="submit" class="w-full bg-[#3E3F29] hover:bg-[#556644] text-white font-semibold py-2 rounded-xl shadow-sm transition-colors">
-                        Book Event
-                    </button>
-                </form>
+            <!-- Event Date -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Event Date</label>
+                <input type="date" name="event_date" 
+                       value="{{ old('event_date') }}"
+                       required
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#778873] focus:border-[#3E3F29]">
+                @error('event_date')
+                    <span class="text-red-500 text-xs">{{ $message }}</span>
+                @enderror
+            </div>
 
+            <!-- Time -->
+            <div class="flex gap-4">
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+                    <input type="time" name="start_time" 
+                           value="{{ old('start_time') }}"
+                           required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#778873] focus:border-[#3E3F29]">
+                    @error('start_time')
+                        <span class="text-red-500 text-xs">{{ $message }}</span>
+                    @enderror
+                </div>
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+                    <input type="time" name="end_time" 
+                           value="{{ old('end_time') }}"
+                           required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#778873] focus:border-[#3E3F29]">
+                    @error('end_time')
+                        <span class="text-red-500 text-xs">{{ $message }}</span>
+                    @enderror
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <textarea name="note" rows="3" placeholder="Additional details..." 
+                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#778873] focus:border-[#3E3F29]">{{ old('note') }}</textarea>
+                @error('note')
+                    <span class="text-red-500 text-xs">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <!-- Submit -->
+            <button type="submit" 
+                    class="w-full bg-[#3E3F29] hover:bg-[#556644] text-white font-semibold py-2 rounded-xl shadow-sm transition-colors">
+                Book Event
+            </button>
+        </form>
     </div>
 </div>
+
 
         @endforeach
     </div>

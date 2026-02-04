@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\Reviews;
 use App\Models\User; // <-- Needed for coordinators
+use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -70,11 +71,14 @@ class ClientController extends Controller
     // ================= BOOKINGS ==================
     public function bookings()
     {
-        $bookings = Booking::with('coordinator')
+        $user = Auth::user();
+
+        // NOTE: client booking index view uses pagination links(),
+        // so we must return a paginator (not a plain collection).
+        $bookings = Booking::with(['event', 'coordinator.user'])
             ->where('client_id', $user->id)
             ->orderBy('event_date', 'desc')
-            ->take(5)
-            ->get();
+            ->paginate(10);
 
         // $bookings = Booking::with(['coordinator'])
         //     ->where('client_id', Auth::id())
@@ -98,19 +102,46 @@ public function storeBooking(Request $request)
 {
     $request->validate([
         'coordinator_id' => 'required|exists:users,id',
-        'event_id'       => 'required|exists:events,id', // required now
-        'event_name'     => 'nullable|string|max:255',
+        'event_type'     => 'nullable|string|max:255',
         'event_date'     => 'required|date', // matches your migration
         'start_time'     => 'required',
         'end_time'       => 'required',
         'note'           => 'nullable|string|max:1000',
     ]);
 
+    // Ensure selected event type (if any) is one the coordinator offers.
+    $coordinatorUser = User::findOrFail($request->coordinator_id);
+    $coordinatorModel = $coordinatorUser->coordinator;
+    if (!$coordinatorModel) {
+        return back()
+            ->withInput()
+            ->withErrors(['coordinator_id' => 'Selected coordinator profile is missing. Please contact admin.']);
+    }
+
+    $allowedTypes = is_array($coordinatorUser->event_types ?? null) ? ($coordinatorUser->event_types ?? []) : [];
+    if ($request->filled('event_type') && !in_array($request->event_type, $allowedTypes, true)) {
+        return back()
+            ->withInput()
+            ->withErrors(['event_type' => 'Selected event type is not available for this coordinator.']);
+    }
+
+    $eventName = $request->event_type ?: 'Event';
+
+    // Create an Event record for this booking (bookings.event_id is required).
+    $event = Event::create([
+        // IMPORTANT: events.coordinator_id references coordinators.id (NOT users.id)
+        'coordinator_id' => $coordinatorModel->id,
+        'event_name'     => $eventName,
+        'event_type'     => $request->event_type ?: $eventName,
+        'description'    => $request->note ?? '',
+    ]);
+
     Booking::create([
         'client_id'      => Auth::id(),
-        'coordinator_id' => $request->coordinator_id,
-        'event_id'       => $request->event_id,
-        'event_name'     => $request->event_name,
+        // IMPORTANT: bookings.coordinator_id references coordinators.id (NOT users.id)
+        'coordinator_id' => $coordinatorModel->id,
+        'event_id'       => $event->id,
+        'event_name'     => $eventName,
         'event_date'     => $request->event_date,
         'start_time'     => $request->start_time,
         'end_time'       => $request->end_time,
@@ -120,7 +151,7 @@ public function storeBooking(Request $request)
     ]);
 
     return redirect()->route('client.bookings.index')
-                     ->with('success', 'Booking created! Waiting for coordinator confirmation.');
+                     ->with('success', 'Booking created! Status: pending.');
 }
 
 
@@ -227,7 +258,6 @@ public function coordinators()
 {
     $coordinators = User::where('role', 'coordinator')
         ->where('is_active', 1)
-        ->with('events') // IMPORTANT for event selection
         ->orderBy('rate', 'asc')
         ->get();
 

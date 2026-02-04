@@ -67,7 +67,7 @@
                 @forelse($bookings as $booking)
                 <tr class="hover:bg-[#F6F8F5] transition">
                     <td class="py-4 px-6 font-medium text-[#3E3F29]">
-                        {{ $booking->event->name ?? 'N/A' }}
+                        {{ $booking->event->event_name ?? $booking->event_name ?? 'N/A' }}
                     </td>
 
                     <td class="py-4 px-6 text-gray-600">
@@ -75,7 +75,7 @@
                     </td>
 
                     <td class="py-4 px-6 text-gray-700">
-                        {{ $booking->coordinator->name ?? 'N/A' }}
+                        {{ $booking->coordinator->user->name ?? 'N/A' }}
                     </td>
 
                     <td class="py-4 px-6">

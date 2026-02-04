@@ -67,13 +67,13 @@
                     </td>
 
                     <td class="py-3 px-5 text-gray-700">
-                        {{ $booking->event->name ?? '-' }}
+                        {{ $booking->event->event_name ?? $booking->event_name ?? '-' }}
                     </td>
 
                     <td class="py-3 px-5">
                         <span class="inline-flex items-center px-4 py-1.5
                             rounded-full text-xs font-medium
-                            @if(strtolower($booking->status) === 'approved')
+                            @if(strtolower($booking->status) === 'confirmed')
                                 bg-[#A1BC98] text-[#3E3F29]
                             @elseif(strtolower($booking->status) === 'cancelled')
                                 bg-[#778873]/30 text-[#3E3F29]

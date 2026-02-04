@@ -141,6 +141,8 @@ Route::middleware('auth')
         // Bookings
         Route::get('/bookings', [CoordinatorController::class, 'bookings'])->name('bookings');
         Route::get('/bookings/{id}', [CoordinatorController::class, 'bookingsShow'])->name('bookings.show');
+        Route::post('/bookings/{id}/confirm', [CoordinatorController::class, 'confirmBooking'])->name('bookings.confirm');
+        Route::post('/bookings/{id}/cancel', [CoordinatorController::class, 'cancelBooking'])->name('bookings.cancel');
 
         // ================= SCHEDULE ROUTES =================
         Route::get('/schedule', [CoordinatorController::class, 'schedule'])->name('schedule');
@@ -214,8 +216,8 @@ Route::get('/coordinators', [ClientController::class, 'coordinators'])
             ->name('ratings');
 
         // ✅ CLIENT PROFILE
-        Route::get('/profile', [ClientController::class, 'edit'])->name('profile'); 
-        Route::post('/profile/update', [ClientController::class, 'updateProfile'])->name('profile.update');
+        Route::get('/profile', [ClientController::class, 'edit'])->name('profile');
+        Route::put('/profile/update', [ClientController::class, 'updateProfile'])->name('profile.update');
     });
 
 

@@ -39,7 +39,7 @@
 
     <form method="POST" action="{{ route('client.profile.update') }}" enctype="multipart/form-data">
         @csrf
-        <!-- @method('PUT') -->
+        @method('PUT')
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 

@@ -19,7 +19,7 @@ class Event extends Model
 
 public function coordinator(): BelongsTo
 {
-    return $this->belongsTo(User::class, 'coordinator_id');
+    return $this->belongsTo(Coordinator::class, 'coordinator_id');
 }
 
     public function bookings():HasMany
