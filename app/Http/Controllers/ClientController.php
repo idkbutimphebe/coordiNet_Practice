@@ -17,70 +17,67 @@ use Carbon\Carbon; // Needed for date comparisons
 class ClientController extends Controller
 {
     // ================= DASHBOARD ==================
-    public function dashboard()
-    {
-        $user = Auth::user();
+// ================= DASHBOARD ==================
+public function dashboard()
+{
+    $user = Auth::user();
 
-        // Latest 5 bookings for this client
-        $bookings = Booking::with(['coordinator.user', 'event'])
-            ->where('client_id', $user->id)
-            ->orderBy('event_date', 'desc')
-            ->take(5)
-            ->get();
+    // Latest 5 bookings for this client, eager loading the coordinator
+    $bookings = Booking::with('coordinator') // <- correct relationship
+        ->where('client_id', $user->id)
+        ->orderBy('event_date', 'desc')
+        ->take(5)
+        ->get();
 
-        // --- NEW DATE-BASED LOGIC ---
-        
-        $totalBookings = Booking::where('client_id', $user->id)->count();
+    // --- NEW DATE-BASED LOGIC ---
+    $totalBookings = Booking::where('client_id', $user->id)->count();
 
-        // Upcoming: Date is Today or Future (and not cancelled)
-        $upcomingEvents = Booking::where('client_id', $user->id)
-            ->whereDate('event_date', '>=', Carbon::today())
-            ->where('status', '!=', 'cancelled')
-            ->count();
+    $upcomingEvents = Booking::where('client_id', $user->id)
+        ->whereDate('event_date', '>=', Carbon::today())
+        ->where('status', '!=', 'cancelled')
+        ->count();
 
-        // Completed: Date is in the Past (and not cancelled)
-        $completedEvents = Booking::where('client_id', $user->id)
-            ->whereDate('event_date', '<', Carbon::today())
-            ->where('status', '!=', 'cancelled')
-            ->count();
-        
-        // Dashboard stats structure
-        $stats = [
-            [
-                'label' => 'My Bookings',
-                'value' => $totalBookings,
-                'link'  => route('client.bookings.index'),
-            ],
-            [
-                'label' => 'Upcoming Events',
-                'value' => $upcomingEvents,
-                // Filter link for upcoming
-                'link'  => route('client.bookings.index'), 
-            ],
-            [
-                'label' => 'Completed Events',
-                'value' => $completedEvents,
-                // Filter link for past
-                'link'  => route('client.bookings.index'),
-            ],
-        ];
+    $completedEvents = Booking::where('client_id', $user->id)
+        ->whereDate('event_date', '<', Carbon::today())
+        ->where('status', '!=', 'cancelled')
+        ->count();
 
-        // Top 4 coordinators logic
-        if (Schema::hasColumn('users', 'rating')) {
-            $orderColumn = 'rating';
-        } elseif (Schema::hasColumn('users', 'rate')) {
-            $orderColumn = 'rate';
-        } else {
-            $orderColumn = 'created_at';
-        }
+    // Dashboard stats structure
+    $stats = [
+        [
+            'label' => 'My Bookings',
+            'value' => $totalBookings,
+            'link'  => route('client.bookings.index'),
+        ],
+        [
+            'label' => 'Upcoming Events',
+            'value' => $upcomingEvents,
+            'link'  => route('client.bookings.index'),
+        ],
+        [
+            'label' => 'Completed Events',
+            'value' => $completedEvents,
+            'link'  => route('client.bookings.index'),
+        ],
+    ];
 
-        $coordinators = User::where('role', 'coordinator')
-            ->orderBy($orderColumn, 'desc')
-            ->take(4)
-            ->get();
-
-        return view('client.dashboard', compact('user', 'bookings', 'stats', 'coordinators'));
+    // Top 4 coordinators logic
+    if (Schema::hasColumn('users', 'rating')) {
+        $orderColumn = 'rating';
+    } elseif (Schema::hasColumn('users', 'rate')) {
+        $orderColumn = 'rate';
+    } else {
+        $orderColumn = 'created_at';
     }
+
+    $coordinators = User::where('role', 'coordinator')
+        ->orderBy($orderColumn, 'desc')
+        ->take(4)
+        ->get();
+
+    return view('client.dashboard', compact('user', 'bookings', 'stats', 'coordinators'));
+}
+
 
     // ================= BOOKINGS ==================
     public function bookings()
