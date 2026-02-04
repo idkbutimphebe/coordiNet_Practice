@@ -197,6 +197,7 @@ Route::middleware('auth')
 
 
         // Bookings
+            Route::get('/dashboard', [\App\Http\Controllers\CoordinatorController::class, 'dashboard'])->name('dashboard');
         Route::get('/bookings', [CoordinatorController::class, 'bookings'])->name('bookings');
         Route::get('/bookings/{id}', [CoordinatorController::class, 'bookingsShow'])->name('bookings.show');
         Route::post('/bookings/{id}/confirm', [CoordinatorController::class, 'confirmBooking'])->name('bookings.confirm');
@@ -218,6 +219,11 @@ Route::middleware('auth')
         Route::get('/income', fn () =>
             view('coordinator.income')
         )->name('income');
+
+        // Subscription
+        Route::get('/subscription', fn () =>
+            view('coordinator.subscription')
+        )->name('subscription');
 
         // Profile
         Route::get('/profile', [CoordinatorController::class, 'profile'])->name('profile');

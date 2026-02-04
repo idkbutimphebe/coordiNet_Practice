@@ -341,6 +341,7 @@ class CoordinatorController extends Controller
 
 public function updateProfile(Request $request)
 {
+    /** @var \App\Models\User $user */
     $user = Auth::user();
 
     $request->validate([
@@ -405,17 +406,18 @@ public function updateProfile(Request $request)
     public function __construct()
     {
         $this->middleware(function ($request, $next) {
-            if (!auth()->check() || auth()->user()->role !== 'coordinator') {
+            if (!Auth::check() || Auth::user()->role !== 'coordinator') {
                 abort(403, 'Unauthorized.');
             }
-            if (!auth()->user()->is_active) {
-                auth()->logout();
+            if (!Auth::user()->is_active) {
+                Auth::logout();
                 return redirect()->route('login')->with('error', 'Your account is pending admin approval.');
             }
 
             // Ensure there is a coordinators table row for this coordinator user.
             // This prevents 403s and allows bookings/events FK constraints to work.
-            $user = auth()->user();
+            /** @var \App\Models\User $user */
+            $user = Auth::user();
             if (!$user->coordinator) {
                 Coordinator::create([
                     'user_id' => $user->id,
