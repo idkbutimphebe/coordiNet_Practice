@@ -54,7 +54,7 @@ class AdminController extends Controller
             $availability[$day] = $isBooked ? 'Booked' : 'Available';
         }
 
-        return view('dashboard', compact('stats', 'availability'));
+        return view('admin.dashboard', compact('stats', 'availability'));
     }
 
     /**

@@ -11,6 +11,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ClientDashboardController;
 
+
 /*
 |--------------------------------------------------------------------------
 | ROOT
@@ -73,6 +74,11 @@ Route::middleware(['auth'])->group(function () {
 
     // ADMIN DASHBOARD
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+
+    Route::middleware(['auth'])->group(function () {
+    Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+});
+
 
     // BOOKINGS
     Route::prefix('bookings')->group(function () {
@@ -172,7 +178,7 @@ Route::middleware('auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')
-Route::middleware('auth')
+
     ->prefix('coordinator')
     ->name('coordinator.')
     ->group(function () {
