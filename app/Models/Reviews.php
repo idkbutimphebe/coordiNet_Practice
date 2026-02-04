@@ -2,29 +2,44 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Reviews extends Model
 {
+    use HasFactory;
+
+    // Allow mass assignment
     protected $fillable = [
-        'booking_id',
         'client_id',
         'coordinator_id',
+        'booking_id',
         'rating',
-        'feedback'
+        'feedback',
     ];
 
-    public function booking():BelongsTo
+    /**
+     * The booking this review belongs to
+     */
+    public function booking(): BelongsTo
     {
-        return $this->belongsTo(Bookings::class);
+        return $this->belongsTo(Booking::class);
     }
-    public function client():BelongsTo
+
+    /**
+     * The client who wrote the review
+     */
+    public function client(): BelongsTo
     {
-        return $this->belongsTo(clientinfo::class,'client_id');
+        return $this->belongsTo(\App\Models\User::class, 'client_id'); // points to users table
     }
-    public function coordinator():BelongsTo
+
+    /**
+     * The coordinator this review is for
+     */
+    public function coordinator(): BelongsTo
     {
-        return $this->belongsTo(CoordinatorsInfo::class,'coordinator_id');
+        return $this->belongsTo(\App\Models\User::class, 'coordinator_id'); // points to users table
     }
 }

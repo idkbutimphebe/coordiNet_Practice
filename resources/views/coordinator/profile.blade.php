@@ -2,7 +2,23 @@
 
 @section('content')
 
-<form action="YOUR_UPDATE_ROUTE_HERE" method="POST" enctype="multipart/form-data">
+@if(session('success'))
+    <div class="max-w-7xl mx-auto mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-xl">
+        {{ session('success') }}
+    </div>
+@endif
+
+@if($errors->any())
+    <div class="max-w-7xl mx-auto mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-xl">
+        <ul class="list-disc pl-5">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+<form action="{{ route('coordinator.update') }}" method="POST" enctype="multipart/form-data">
     @csrf
     @method('PUT')
 
@@ -126,6 +142,48 @@
                     </div>
                 </div>
 
+ {{-- Event Types (Fixed List) --}}
+<div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+    <h2 class="font-bold text-[#3E3F29] mb-4 text-lg">Event Types You Handle</h2>
+
+    @php
+        // Available event types
+        $availableEvents = ['Wedding', 'Birthday', 'Debut', 'Corporate', 'Anniversary', 'Baby Shower', 'Graduation', 'Engagement'];
+
+        // Get existing event types from user profile (JSON column)
+        $dbEvents = is_array($user->event_types ?? null) ? ($user->event_types ?? []) : [];
+
+        // Merge old input with database values
+        $currentEvents = old('event_types', $dbEvents) ?? [];
+    @endphp
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+        @foreach($availableEvents as $event)
+            <label class="cursor-pointer relative">
+                <input type="checkbox" name="event_types[]" value="{{ $event }}"
+                       class="peer sr-only"
+                       {{ in_array($event, $currentEvents) ? 'checked' : '' }}>
+                <div class="flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-200 bg-white border-gray-200 text-gray-500 hover:bg-gray-50 peer-checked:bg-[#F6F8F5] peer-checked:border-[#A1BC98] peer-checked:text-[#3E3F29] peer-checked:font-bold">
+                    <div class="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center peer-checked:border-[#778873] peer-checked:bg-[#778873] transition-colors">
+                        <svg class="w-3 h-3 text-white opacity-0 peer-checked:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    {{ $event }}
+                </div>
+            </label>
+        @endforeach
+    </div>
+
+    <p class="text-xs text-gray-400 mt-2">Select the event types you handle. You can check multiple options.</p>
+    @error('event_types')
+        <p class="text-xs text-red-600 mt-2">{{ $message }}</p>
+    @enderror
+</div>
+
+
+
+                {{-- Portfolio (FIXED) --}}
                 <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                     <div class="flex items-center justify-between mb-6">
                         <h2 class="font-bold text-[#3E3F29] text-lg">Portfolio</h2>
