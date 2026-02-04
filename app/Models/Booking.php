@@ -31,30 +31,29 @@ class Booking extends Model
 
     /* ================= RELATIONSHIPS ================= */
 
-    // Link to the client (user with role='client')
-    public function client()
-    {
-        return $this->belongsTo(User::class, 'client_id');
-    }
+// Link to the client (user with role='client')
+public function client()
+{
+    return $this->belongsTo(User::class, 'client_id');
+}
 
-    // Link to the coordinator (user with role='coordinator')
-    public function coordinator()
-    {
-        // bookings.coordinator_id references coordinators.id
-        return $this->belongsTo(Coordinator::class, 'coordinator_id');
-    }
+// Link to the coordinator (Coordinator model, not User)
+public function coordinator()
+{
+    return $this->belongsTo(Coordinator::class, 'coordinator_id');
+}
 
-    // Link to the event
-    public function event()
-    {
-        return $this->belongsTo(Event::class, 'event_id');
-    }
+// Link to the event
+public function event()
+{
+    return $this->belongsTo(Event::class, 'event_id');
+}
 
-    // Link to services
-    public function services()
-    {
-        return $this->belongsToMany(Service::class, 'booking_services')
-            ->withPivot('quantity', 'price')
-            ->withTimestamps();
-    }
+// Link to services
+public function services()
+{
+    return $this->belongsToMany(Service::class, 'booking_services')
+        ->withPivot('quantity', 'price')
+        ->withTimestamps();
+}
 }

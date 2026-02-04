@@ -10,64 +10,74 @@ use App\Models\Coordinator;
 use App\Models\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon; // Needed for date comparisons
 
 class ClientController extends Controller
 {
     // ================= DASHBOARD ==================
-    public function dashboard()
-    {
-        $user = Auth::user();
+// ================= DASHBOARD ==================
+public function dashboard()
+{
+    $user = Auth::user();
 
-        // Latest 5 bookings for this client
-        $bookings = Booking::with(['coordinator.user', 'event'])
-            ->where('client_id', $user->id)
-            ->orderBy('event_date', 'desc')
-            ->take(5)
-            ->get();
+    // Latest 5 bookings for this client, eager loading the coordinator
+    $bookings = Booking::with('coordinator') // <- correct relationship
+        ->where('client_id', $user->id)
+        ->orderBy('event_date', 'desc')
+        ->take(5)
+        ->get();
 
-        // Calculate stats
-        $totalBookings = Booking::where('client_id', $user->id)->count();
-        $upcomingEvents = Booking::where('client_id', $user->id)->where('status', 'pending')->count();
-        $completedEvents = Booking::where('client_id', $user->id)->where('status', 'completed')->count();
-        
-        // Dashboard stats
-        $stats = [
-            [
-                'label' => 'My Bookings',
-                'value' => $totalBookings,
-                'link'  => route('client.bookings.index'),
-            ],
-            [
-                'label' => 'Upcoming Events',
-                'value' => $upcomingEvents,
-                'link'  => route('client.bookings.index', ['status' => 'pending']),
-            ],
-            [
-                'label' => 'Completed Events',
-                'value' => $completedEvents,
-                'link'  => route('client.bookings.index', ['status' => 'completed']),
-            ],
-        ];
+    // --- NEW DATE-BASED LOGIC ---
+    $totalBookings = Booking::where('client_id', $user->id)->count();
 
-        // Top 4 coordinators
-        if (Schema::hasColumn('users', 'rating')) {
-            $orderColumn = 'rating';
-        } elseif (Schema::hasColumn('users', 'rate')) {
-            $orderColumn = 'rate';
-        } else {
-            $orderColumn = 'created_at';
-        }
+    $upcomingEvents = Booking::where('client_id', $user->id)
+        ->whereDate('event_date', '>=', Carbon::today())
+        ->where('status', '!=', 'cancelled')
+        ->count();
 
-        $coordinators = User::where('role', 'coordinator')
-            ->orderBy($orderColumn, 'desc')
-            ->take(4)
-            ->get();
+    $completedEvents = Booking::where('client_id', $user->id)
+        ->whereDate('event_date', '<', Carbon::today())
+        ->where('status', '!=', 'cancelled')
+        ->count();
 
-        return view('client.dashboard', compact('user', 'bookings', 'stats', 'coordinators'));
+    // Dashboard stats structure
+    $stats = [
+        [
+            'label' => 'My Bookings',
+            'value' => $totalBookings,
+            'link'  => route('client.bookings.index'),
+        ],
+        [
+            'label' => 'Upcoming Events',
+            'value' => $upcomingEvents,
+            'link'  => route('client.bookings.index'),
+        ],
+        [
+            'label' => 'Completed Events',
+            'value' => $completedEvents,
+            'link'  => route('client.bookings.index'),
+        ],
+    ];
+
+    // Top 4 coordinators logic
+    if (Schema::hasColumn('users', 'rating')) {
+        $orderColumn = 'rating';
+    } elseif (Schema::hasColumn('users', 'rate')) {
+        $orderColumn = 'rate';
+    } else {
+        $orderColumn = 'created_at';
     }
+
+    $coordinators = User::where('role', 'coordinator')
+        ->orderBy($orderColumn, 'desc')
+        ->take(4)
+        ->get();
+
+    return view('client.dashboard', compact('user', 'bookings', 'stats', 'coordinators'));
+}
+
 
     // ================= BOOKINGS ==================
     public function bookings()
@@ -90,7 +100,7 @@ class ClientController extends Controller
         
         $booking->load(['event', 'coordinator.user']);
 
-        // Prevent "Table not found" error for services
+        // Prevent "Table not found" error by setting empty services list
         $booking->setRelation('services', collect());
 
         return view('client.booking.show', compact('booking'));
@@ -116,8 +126,6 @@ class ClientController extends Controller
                 ->withErrors(['coordinator_id' => 'Selected coordinator profile is missing. Please contact admin.']);
         }
 
-        $allowedTypes = is_array($coordinatorUser->event_types ?? null) ? ($coordinatorUser->event_types ?? []) : [];
-        
         $eventName = $request->event_type ?: 'Event';
 
         $event = Event::create([
@@ -149,7 +157,7 @@ class ClientController extends Controller
         $booking = Booking::where('client_id', Auth::id())->findOrFail($id);
 
         $request->validate([
-            'status' => 'required|in:pending,confirmed,cancelled',
+            'status' => 'required|in:pending,confirmed,cancelled,completed',
         ]);
 
         $booking->status = $request->status;
@@ -163,8 +171,7 @@ class ClientController extends Controller
     {
         $clientId = Auth::id();
 
-        // ✅ FIXED: Changed 'coordinator.user' to 'coordinator'
-        // The error confirmed that 'coordinator' is ALREADY the User model.
+        // Fixed relationship access
         $reviews = Reviews::with('coordinator')
             ->where('client_id', $clientId)
             ->orderByDesc('created_at')
