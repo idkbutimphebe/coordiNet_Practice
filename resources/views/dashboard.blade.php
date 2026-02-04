@@ -22,7 +22,7 @@
     @endphp
 
     @foreach($stats as $stat)
-    <a href="{{ $stat['route'] }}" 
+    <a href="{{ $stat['route'] ?? '#' }}" 
        class="bg-gradient-to-r from-[#778873] to-[#3E3F29]
                 rounded-2xl text-white p-6 shadow-md
                 flex items-center gap-4 transition-all duration-300 

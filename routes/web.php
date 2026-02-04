@@ -10,6 +10,9 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ClientDashboardController;
+use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use Illuminate\Support\Facades\Auth;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,11 +21,11 @@ use App\Http\Controllers\ClientDashboardController;
 */
 Route::get('/', function () {
 
-    if (!auth()->check()) {
+    if (!Auth::check()) {
         return view('welcome');
     }
 
-    return match (auth()->user()->role) {
+    return match (Auth::user()->role) {
         'admin'       => redirect()->route('dashboard'),
         'coordinator' => redirect()->route('coordinator.dashboard'),
         'client'      => redirect()->route('client.dashboard'),
@@ -40,11 +43,11 @@ Route::get('/', function () {
 */
 // ROOT
 Route::get('/', function () {
-    if (!auth()->check()) {
+    if (!Auth::check()) {
         return view('welcome');
     }
 
-    return match (auth()->user()->role) {
+    return match (Auth::user()->role) {
         'admin'       => redirect()->route('dashboard'),
         'coordinator' => redirect()->route('coordinator.dashboard'),
         'client'      => redirect()->route('client.dashboard'),
@@ -64,9 +67,7 @@ Route::middleware(['auth', 'role:client'])->group(function() {
     Route::get('/client/dashboard', [ClientDashboardController::class, 'index'])->name('client.dashboard');
 });
 
-Route::middleware(['auth', 'role:coordinator'])->group(function() {
-    Route::get('/coordinator/dashboard', [CoordinatorDashboardController::class, 'index'])->name('coordinator.dashboard');
-});
+// Coordinator dashboard routes are defined later under the 'coordinator' prefix.
 
 // AUTH ROUTES
 Route::middleware(['auth'])->group(function () {
@@ -172,10 +173,10 @@ Route::middleware('auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')
-Route::middleware('auth')
     ->prefix('coordinator')
     ->name('coordinator.')
     ->group(function () {
+
 
         Route::get('/dashboard', fn () =>
             view('coordinator.dashboard')
