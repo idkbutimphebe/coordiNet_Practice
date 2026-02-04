@@ -14,13 +14,17 @@ class BookingController extends Controller
 
         if ($request->filled('search')) {
             $query->whereHas('event', function($q) use ($request) {
+                // NOTE: Ensure your 'events' table has a 'name' column. 
+                // If it is 'event_name', change 'name' to 'event_name' below.
                 $q->where('name', 'like', "%{$request->search}%")
                   ->orWhereHas('coordinator', fn($c) => $c->where('name', 'like', "%{$request->search}%"));
             });
         }
 
-        $bookings = $query->orderBy('booking_date', 'desc')
-                          ->paginate(10); // pagination
+        // ✅ FIXED: Changed 'booking_date' to 'event_date'
+        // (You can also use 'created_at' if you want to sort by when the booking was made)
+        $bookings = $query->orderBy('event_date', 'desc')
+                          ->paginate(10); 
 
         return view('bookings.index', compact('bookings'));
     }

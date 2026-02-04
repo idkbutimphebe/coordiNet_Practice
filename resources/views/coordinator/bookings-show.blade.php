@@ -29,12 +29,12 @@
                     <div class="w-14 h-14 rounded-full bg-[#A1BC98]/60
                                 flex items-center justify-center
                                 text-[#3E3F29] font-bold text-lg">
-                        {{ strtoupper(substr($booking->client->user->name,0,1)) }}
+                        {{ strtoupper(substr($booking->client->name ?? 'C',0,1)) }}
                     </div>
 
                     <div>
                         <h2 class="text-xl font-semibold text-[#3E3F29]">
-                            {{ $booking->client->user->name }}
+                            {{ $booking->client->name ?? 'Client' }}
                         </h2>
                         <p class="text-sm text-[#778873]">
                             Booking Request
@@ -59,7 +59,7 @@
                             Event Requested
                         </p>
                         <p class="mt-1 font-semibold text-[#3E3F29]">
-                            {{ $booking->event->name ?? 'N/A' }}
+                            {{ $booking->event->event_type ?? $booking->event_name ?? 'N/A' }}
                         </p>
                     </div>
 
@@ -68,25 +68,25 @@
                             Requested Date
                         </p>
                         <p class="mt-1 font-semibold text-[#3E3F29]">
-                            {{ \Carbon\Carbon::parse($booking->booking_date)->format('F d, Y') }}
+                            {{ $booking->event_date?->format('F d, Y') ?? 'N/A' }}
                         </p>
                     </div>
 
                     <div class="p-5 rounded-xl bg-[#A1BC98]/20">
                         <p class="text-xs uppercase tracking-wide text-[#778873]">
-                            Coordinator
+                            Time
                         </p>
                         <p class="mt-1 font-semibold text-[#3E3F29]">
-                            {{ $booking->coordinator->user->name ?? 'Not Assigned' }}
+                            {{ $booking->start_time }} - {{ $booking->end_time }}
                         </p>
                     </div>
 
                     <div class="p-5 rounded-xl bg-[#A1BC98]/20">
                         <p class="text-xs uppercase tracking-wide text-[#778873]">
-                            Request ID
+                            Notes
                         </p>
                         <p class="mt-1 font-semibold text-[#3E3F29]">
-                            #BK-{{ $booking->id }}
+                            {{ $booking->note ?? '-' }}
                         </p>
                     </div>
 
@@ -104,23 +104,23 @@
                     </a>
 
                     @if($booking->status === 'pending')
-                    <form method="POST" action="{{ route('coordinator.bookings.approve', $booking) }}">
+                    <form method="POST" action="{{ route('coordinator.bookings.confirm', $booking->id) }}">
                         @csrf
                         <button
                             class="px-5 py-2 rounded-lg text-sm
                                    bg-[#3E3F29] text-white
                                    hover:opacity-90 transition">
-                            Approve
+                            Accept
                         </button>
                     </form>
 
-                    <form method="POST" action="{{ route('coordinator.bookings.reject', $booking) }}">
+                    <form method="POST" action="{{ route('coordinator.bookings.cancel', $booking->id) }}">
                         @csrf
                         <button
                             class="px-5 py-2 rounded-lg text-sm
                                    bg-red-600 text-white
                                    hover:bg-red-700 transition">
-                            Reject
+                            Decline
                         </button>
                     </form>
                     @endif

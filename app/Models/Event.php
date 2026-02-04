@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\User;
 
 class Event extends Model
 {
@@ -15,10 +16,12 @@ class Event extends Model
         'description',
     ];
 
-    public function coordinator():BelongsTo
-    {
-        return $this->belongsTo(CoordinatorsInfo::class, 'coordinator_id');
-    }
+
+public function coordinator(): BelongsTo
+{
+    return $this->belongsTo(Coordinator::class, 'coordinator_id');
+}
+
     public function bookings():HasMany
     {
         return $this->hasMany(Booking::class);

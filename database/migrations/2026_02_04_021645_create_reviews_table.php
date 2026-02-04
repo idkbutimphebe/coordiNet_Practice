@@ -11,21 +11,14 @@ return new class extends Migration
         Schema::create('reviews', function (Blueprint $table) {
             $table->engine = 'InnoDB'; 
             $table->id();
-            
-            // FIX: Use foreignId() with constrained() for cleaner, error-free code
-            
-            // 1. Link to Bookings Table
+ 
             $table->foreignId('booking_id')->constrained('bookings')->onDelete('cascade');
 
-            // 2. Link to Users Table (For the Client)
-            // Changed 'clientinfos' -> 'users'
             $table->foreignId('client_id')->constrained('users')->onDelete('cascade');
 
-            // 3. Link to Users Table (For the Coordinator)
-            // Changed 'coordinatorsinfos' -> 'users'
             $table->foreignId('coordinator_id')->constrained('users')->onDelete('cascade');
 
-            $table->tinyInteger('rating'); // 1-5 stars
+            $table->tinyInteger('rating'); 
             $table->text('feedback')->nullable();
 
             $table->timestamps();

@@ -69,14 +69,14 @@
                 @forelse($bookings as $booking)
                 <tr class="hover:bg-[#A1BC98]/20 transition">
                     <td class="py-4 px-6 font-medium text-[#3E3F29]">
-                        {{ $booking->client->user->name }}
+                        {{ $booking->client->name ?? 'N/A' }}
                     </td>
                     <td class="py-4 px-6 text-gray-700">
                         {{ $booking->event_name ?? 'N/A' }}
                     </td>
                     <td class="py-4 px-6">
                         <span class="inline-block px-3 py-1 text-xs rounded-full
-                                     {{ $booking->status == 'pending' ? 'bg-[#A1BC98]' : ($booking->status == 'approved' ? 'bg-[#3E3F29] text-white' : 'bg-red-600 text-white') }}
+                                     {{ $booking->status == 'pending' ? 'bg-[#A1BC98]' : ($booking->status == 'confirmed' ? 'bg-[#3E3F29] text-white' : 'bg-red-600 text-white') }}
                                      text-[#3E3F29] font-medium">
                             {{ ucfirst($booking->status) }}
                         </span>

@@ -2,6 +2,12 @@
 
 @section('content')
 
+@if(session('error'))
+    <div class="mb-6 p-4 rounded-xl bg-red-100 border border-red-300 text-red-800">
+        {{ session('error') }}
+    </div>
+@endif
+
 <!-- ================= GREETING ================= -->
 <div class="mb-8">
     <h2 class="text-3xl font-bold text-[#3E3F29]">
@@ -11,6 +17,16 @@
         Here’s what’s happening in your system today.
     </p>
 </div>
+
+@php
+    $requests = $pendingBookings->map(function($booking) {
+        return [
+            'name' => $booking->client->name ?? 'Client',
+            'type' => 'Booking',
+            'date' => $booking->event_date?->format('M d, Y') ?? 'N/A',
+        ];
+    });
+@endphp
 
 <!-- ================= TOP GRID ================= -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">

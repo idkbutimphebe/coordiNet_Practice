@@ -9,6 +9,9 @@ use App\Http\Controllers\RatingController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\BookingController;
+use App\Models\Event; // Add this at the top
+use App\Http\Controllers\ReviewController;
+
 use App\Http\Controllers\ClientDashboardController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
@@ -34,9 +37,9 @@ Route::get('/', function () {
 });
 
 /*
-|--------------------------------------------------------------------------
+|-------------------------------------------------------------------------- 
 | ROOT
-|--------------------------------------------------------------------------
+|-------------------------------------------------------------------------- 
 |
 | Redirect users based on their role. Guests see the welcome page.
 |
@@ -77,10 +80,10 @@ Route::middleware(['auth'])->group(function () {
 
     // BOOKINGS
     Route::prefix('bookings')->group(function () {
-        // List all bookings
+        // List all bookings (Admin)
         Route::get('/', [AdminController::class, 'index'])->name('bookings');
 
-        // Show single booking using "show" page
+        // Show single booking (Admin)
         Route::get('/show/{id}', [AdminController::class, 'show'])->name('bookings.show');
     });
 
@@ -114,13 +117,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/ratings', [AdminController::class, 'ratingReport'])
              ->name('ratings');
     }); // end reports group
-
 });
 
 /*
-|--------------------------------------------------------------------------
+|-------------------------------------------------------------------------- 
 | PROFILE (ALL AUTH USERS)
-|--------------------------------------------------------------------------
+|-------------------------------------------------------------------------- 
 */
 Route::middleware('auth')->group(function () {
 
@@ -144,11 +146,27 @@ Route::middleware('auth')->group(function () {
 });
 
 /*
-|--------------------------------------------------------------------------
+|-------------------------------------------------------------------------- 
 | 1. COORDINATORS LIST (PUBLIC/CLIENT VIEW)
-|--------------------------------------------------------------------------
+|-------------------------------------------------------------------------- 
 */
 Route::middleware('auth')->prefix('coordinators')->group(function () {
+
+/*
+|-------------------------------------------------------------------------- 
+| 2. GENERAL PAGES
+|-------------------------------------------------------------------------- 
+*/
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/pending', [AdminController::class, 'pending'])->name('pending');
+    Route::patch('/coordinator/{id}/approve', [AdminController::class, 'approveCoordinator'])->name('approve');
+    Route::delete('/coordinator/{id}/decline', [AdminController::class, 'declineCoordinator'])->name('decline');
+});
+
+
+// Route::get('/pending', [AdminController::class, 'pending'])->name('pending.coordinator');
+// Route::patch('/coordinator/{id}/approve', [AdminController::class, 'approveCoordinator'])->name('pending.coordinator.approve');
+// Route::delete('/coordinator/{id}/decline', [AdminController::class, 'declineCoordinator'])->name('pending.coordinator.decline');
 
     Route::get('/', [CoordinatorController::class, 'index'])
         ->name('coordinators');
@@ -168,9 +186,9 @@ Route::middleware('auth')->group(function () {
     });
 
 /*
-|--------------------------------------------------------------------------
+|-------------------------------------------------------------------------- 
 | 3. COORDINATOR DASHBOARD
-|--------------------------------------------------------------------------
+|-------------------------------------------------------------------------- 
 */
 Route::middleware('auth')
     ->prefix('coordinator')
@@ -178,17 +196,16 @@ Route::middleware('auth')
     ->group(function () {
 
 
-        Route::get('/dashboard', fn () =>
-            view('coordinator.dashboard')
-        )->name('dashboard');
+        // Bookings
+        Route::get('/bookings', [CoordinatorController::class, 'bookings'])->name('bookings');
+        Route::get('/bookings/{id}', [CoordinatorController::class, 'bookingsShow'])->name('bookings.show');
+        Route::post('/bookings/{id}/confirm', [CoordinatorController::class, 'confirmBooking'])->name('bookings.confirm');
+        Route::post('/bookings/{id}/cancel', [CoordinatorController::class, 'cancelBooking'])->name('bookings.cancel');
 
-        Route::get('/bookings', fn () =>
-            view('coordinator.bookings')
-        )->name('bookings');
-
-        Route::get('/bookings/{id}', fn ($id) =>
-            view('coordinator.bookings-show')
-        )->name('bookings.show');
+        // ================= SCHEDULE ROUTES =================
+        Route::get('/schedule', [CoordinatorController::class, 'schedule'])->name('schedule');
+        Route::get('/schedule-events', [CoordinatorController::class, 'getScheduleEvents'])->name('events');
+        Route::post('/schedule/save', [CoordinatorController::class, 'saveEvent'])->name('schedule.save');
 
         Route::get('/schedule', fn () =>
             view('coordinator.schedule')
@@ -202,13 +219,16 @@ Route::middleware('auth')
             view('coordinator.income')
         )->name('income');
 
-        Route::get('/subscription', fn () =>
-            view('coordinator.subscription')
-        )->name('subscription');
-
-        Route::get('/profile', fn () =>
-            view('coordinator.profile')
-        )->name('profile');
+        // Profile
+        Route::get('/profile', [CoordinatorController::class, 'profile'])->name('profile');
+        Route::put('/profile', [CoordinatorController::class, 'updateProfile'])->name('update');
+        
+        //choose events
+        Route::post('/events', [CoordinatorController::class, 'storeEvent'])
+            ->name('coordinator.events.store');
+            
+          Route::post('/events', [CoordinatorController::class, 'storeEvent'])
+            ->name('events.store');   
 
         // Payments
         Route::get('/checkout', [PaymentController::class, 'checkout'])->name('checkout');
@@ -220,35 +240,49 @@ Route::middleware('auth')
 | CLIENT
 |--------------------------------------------------------------------------
 */
+
 Route::middleware('auth')
     ->prefix('client')
     ->name('client.')
     ->group(function () {
 
-        // Dashboard (already exists, kept as-is)
-        Route::get('/dashboard', fn () => view('client.dashboard'))->name('dashboard');
+        // ✅ CLIENT DASHBOARD
+        Route::get('/dashboard', [ClientController::class, 'dashboard'])
+            ->name('dashboard');
 
-        // ------------------ MISSING ROUTES ADDED ------------------
+        // ✅ COORDINATORS LIST
+        Route::get('/coordinators', [ClientController::class, 'coordinators'])
+            ->name('coordinators');
 
-        // Coordinators via controller
-        Route::get('/coordinators', [ClientDashboardController::class, 'coordinatorsPage'])->name('coordinators');
-        Route::get('/coordinators/{coordinator}', [CoordinatorController::class, 'showForClient'])->name('coordinators.profile');
+        // ✅ VIEW SINGLE COORDINATOR
+        Route::get('/coordinators/{id}', function ($id) {
+            $coordinator = \App\Models\User::where('role', 'coordinator')->findOrFail($id);
+            return view('client.coordinator-view', compact('coordinator'));
+        })->name('coordinators.view');
 
-        // Bookings via controller
-        Route::get('/bookings', [ClientDashboardController::class, 'myBookings'])->name('bookings.index');
-        Route::get('/bookings/{id}', [ClientDashboardController::class, 'bookingShow'])->name('bookings.show');
+        // ✅ CLIENT BOOKINGS
+        // These now correctly point to ClientController
+        Route::get('/bookings', [ClientController::class, 'bookings'])
+            ->name('bookings.index');
 
-        // Book a coordinator
-        Route::post('/coordinators/{coordinator}/book', [ClientDashboardController::class, 'bookCoordinator'])->name('coordinators.book');
+        Route::get('/bookings/{booking}', [ClientController::class, 'showBooking'])
+            ->name('bookings.show');
 
-        // Ratings
-        Route::get('/ratings', [ClientDashboardController::class, 'ratingsPage'])->name('ratings');
-        Route::post('/ratings', [RatingController::class, 'store'])->name('ratings.store');
+        Route::post('/bookings', [ClientController::class, 'storeBooking'])
+            ->name('bookings.store');
 
-        // Profile via controller
-        Route::get('/profile', [ClientDashboardController::class, 'profile'])->name('profile');
+        // ✅ RATINGS (Store)
+        // Moved here from the deleted group so it still works
+        Route::post('/ratings', [RatingController::class, 'store'])
+            ->name('ratings.store');
 
-        // ------------------ END MISSING ROUTES ------------------
+        // ✅ RATINGS (View)
+        Route::get('/ratings', [ClientController::class, 'ratings'])
+            ->name('ratings');
+
+        // ✅ CLIENT PROFILE
+        Route::get('/profile', [ClientController::class, 'edit'])->name('profile');
+        Route::put('/profile/update', [ClientController::class, 'updateProfile'])->name('profile.update');
     });
 
 require __DIR__ . '/auth.php';
