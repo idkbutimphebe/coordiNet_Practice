@@ -28,9 +28,9 @@ class RegisteredUserController extends Controller
      * @throws \Illuminate\Validation\ValidationException
      */
     public function store(Request $request): RedirectResponse
-{
-    // 1. Validate input
-    $request->validate([
+    {
+        // 1. Validate input
+        $request->validate([
         'name' => ['required', 'string', 'max:255'],
         'email' => ['required', 'string', 'email', 'max:255', 'unique:'.User::class],
         'role' => ['required', 'string', 'in:client,coordinator,admin'], 
@@ -47,24 +47,20 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
 
-   // 3. Redirect based on role 
+        // 3. Redirect based on role
+        if ($user->role === 'admin') {
+            return redirect()->route('login')
+                ->with('success', 'Admin registration successful! You can now log in.');
+        }
 
-     if ($user->role === 'client') {
-        // Client can log in immediately
+        if ($user->role === 'coordinator') {
+            // Coordinator cannot log in yet
+            return redirect('/')->with('info', 'Registration submitted. Please wait for a notification from the admin.');
+        }
+
+        // Default: client
         return redirect()->route('login')
             ->with('success', 'Registration successful! You can now log in.');
-    }       
-   
-     if ($user->role === 'coordinator') {
-        // Coordinator cannot log in yet
-        return redirect('/')
-            ->with('info', 'Registration submitted. Please wait for a notification from the admin.');
+    }
 
-
-    // Admin fallback (if needed)
-    return redirect()->route('login')
-        ->with('success', 'Admin registration successful! You can now log in.');       
-}
-
-}
 }
