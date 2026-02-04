@@ -4,6 +4,12 @@
 
 @php
     use App\Models\Reviews;
+    use App\Models\Booking;
+    use Illuminate\Support\Facades\Auth;
+
+    // Get the User model associated with this coordinator profile
+    // (Assuming Coordinator model belongsTo User)
+    $coordinatorUser = $coordinator->user; 
 
     // Average rating and total reviews
     $averageRating = Reviews::where('coordinator_id', $coordinator->id)->avg('rating') ?? 0;
@@ -11,66 +17,72 @@
 
     $totalReviews = Reviews::where('coordinator_id', $coordinator->id)->count();
 
-    // ✅ FIX: Get services from coordinator instead of undefined $services
+    // Fix: Get services from coordinator
     $servicesRaw = $coordinator->services ?? [];
-
-    $servicesArray = is_string($servicesRaw)
-        ? json_decode($servicesRaw, true)
+    $servicesArray = is_string($servicesRaw) 
+        ? json_decode($servicesRaw, true) 
         : ($servicesRaw ?? []);
 
     // Portfolio default
     $portfolio = $coordinator->portfolio ?? [];
-@endphp
 
-<p class="text-sm text-gray-600">
-    {{ count($servicesArray) ? implode(' & ', $servicesArray) : 'General' }} Event Coordinator
-</p>
+    // CHECK: Has the current client completed an event with this coordinator?
+    $hasCompletedBooking = Booking::where('client_id', Auth::id())
+        ->where('coordinator_id', $coordinator->id)
+        ->where(function($query) {
+            $query->where('status', 'completed')
+                  ->orWhereDate('event_date', '<', now());
+        })
+        ->exists();
+@endphp
 
 <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-    <!-- ================= LEFT CONTENT ================= -->
     <div class="lg:col-span-2 space-y-8">
 
-        <!-- PROFILE CARD -->
         <div class="bg-white rounded-3xl p-6 flex items-center gap-6 shadow-sm">
-            <img src="{{ $coordinator->avatar ? asset('storage/'.$coordinator->avatar) : 'https://i.pravatar.cc/150?img=12' }}"
+            
+            <img src="{{ $coordinatorUser->avatar ? asset('storage/'.$coordinatorUser->avatar) : 'https://i.pravatar.cc/150?img=12' }}" 
                  class="w-24 h-24 rounded-full border-4 border-[#A1BC98] object-cover">
 
             <div class="flex-1">
                 <h1 class="text-2xl font-extrabold text-[#3E3F29]">
-                    {{ $coordinator->name }}
+                    {{ $coordinatorUser->name ?? $coordinator->name }}
                 </h1>
 
                 <p class="text-sm text-gray-600">
                     {{ count($servicesArray) ? implode(' & ', $servicesArray) : 'General' }} Event Coordinator
                 </p>
 
-                <!-- RATING -->
-                <div class="flex items-center gap-2 mt-2">
-                    @for($i = 1; $i <= 5; $i++)
-                        <span class="text-xl {{ $i <= round($averageRating) ? 'text-yellow-400' : 'text-gray-300' }}">
-                            ★
+                @if($hasCompletedBooking)
+                    <div class="flex items-center gap-2 mt-2">
+                        @for($i = 1; $i <= 5; $i++)
+                            <span class="text-xl {{ $i <= round($averageRating) ? 'text-yellow-400' : 'text-gray-300' }}">
+                                ★
+                            </span>
+                        @endfor
+                        <span class="text-sm text-gray-500">
+                            {{ $averageRating }} ({{ $totalReviews }} reviews)
                         </span>
-                    @endfor
-                    <span class="text-sm text-gray-500">
-                        {{ $averageRating }} ({{ $totalReviews }} reviews)
-                    </span>
-                </div>
+                    </div>
+                @else
+                    <div class="mt-2 text-xs text-gray-400 italic">
+                        Ratings visible after completion
+                    </div>
+                @endif
 
-                <!-- Email -->
                 <p class="text-xs text-gray-400 mt-1">
-                    {{ $coordinator->email ?? 'No email provided' }}
+                    {{ $coordinatorUser->email ?? 'No email provided' }}
                 </p>
 
-                <span class="inline-flex items-center gap-2 mt-3 px-4 py-1.5
-                             text-sm rounded-full bg-[#E9F0E6]
+                <span class="inline-flex items-center gap-2 mt-3 px-4 py-1.5 
+                             text-sm rounded-full bg-[#E9F0E6] 
                              text-[#3E3F29] font-medium">
-                    {{ $coordinator->is_active ? 'Available for Booking' : 'Currently Busy' }}
+                    {{ $coordinatorUser->is_active ?? true ? 'Available for Booking' : 'Currently Busy' }}
                 </span>
             </div>
         </div>
 
-        <!-- ================= PORTFOLIO ================= -->
         <div class="bg-white rounded-3xl p-6 shadow-sm">
             <h2 class="font-semibold text-lg text-[#3E3F29] mb-5">
                 Event Designs & Portfolio
@@ -80,10 +92,10 @@
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-5">
                     @foreach($portfolio as $item)
                         @if(!empty($item['image']))
-                            <img src="{{ asset('storage/'.$item['image']) }}"
+                            <img src="{{ asset('storage/'.$item['image']) }}" 
                                  class="rounded-2xl h-44 w-full object-cover hover:scale-105 transition">
                         @else
-                            <div class="rounded-2xl h-44 w-full bg-gray-100
+                            <div class="rounded-2xl h-44 w-full bg-gray-100 
                                         flex items-center justify-center text-gray-400 text-sm">
                                 No image
                             </div>
@@ -91,14 +103,13 @@
                     @endforeach
                 </div>
             @else
-                <div class="rounded-2xl h-44 w-full bg-gray-100
+                <div class="rounded-2xl h-44 w-full bg-gray-100 
                             flex items-center justify-center text-gray-400 text-sm">
                     No portfolio uploaded yet
                 </div>
             @endif
         </div>
 
-        <!-- ABOUT -->
         <div class="bg-white rounded-3xl p-6 shadow-sm">
             <h2 class="font-semibold text-lg text-[#3E3F29] mb-3">
                 About the Coordinator
@@ -109,7 +120,6 @@
             </p>
         </div>
 
-        <!-- ================= CLIENT REVIEWS ================= -->
         <div class="bg-white rounded-3xl p-6 shadow-sm">
             <h2 class="font-semibold text-lg text-[#3E3F29] mb-5">
                 Client Reviews
@@ -117,7 +127,7 @@
 
             @php
                 $reviews = Reviews::where('coordinator_id', $coordinator->id)
-                            ->with('client')
+                            ->with('client.user') // Adjusted to get client name correctly
                             ->get();
             @endphp
 
@@ -126,7 +136,7 @@
                     <div class="border-b last:border-none pb-4 mb-4 last:mb-0">
                         <div class="flex items-center justify-between">
                             <p class="font-medium text-[#3E3F29]">
-                                {{ $review->client->name ?? 'Anonymous' }}
+                                {{ $review->client->user->name ?? $review->client->name ?? 'Anonymous' }}
                             </p>
                             <div class="flex">
                                 @for($i = 1; $i <= 5; $i++)
@@ -149,10 +159,8 @@
 
     </div>
 
-    <!-- ================= RIGHT SIDEBAR ================= -->
     <div class="space-y-8">
 
-        <!-- SERVICES -->
         <div class="bg-white rounded-3xl p-6 shadow-sm">
             <h2 class="font-semibold text-lg text-[#3E3F29] mb-5">
                 Services Offered
@@ -174,7 +182,6 @@
             </div>
         </div>
 
-        <!-- AVAILABILITY -->
         <div class="bg-white rounded-3xl p-6 shadow-sm">
             <h2 class="font-semibold text-[#3E3F29] mb-4">
                 Availability
@@ -187,7 +194,7 @@
 
                 @for($i = 1; $i <= 31; $i++)
                     @php $booked = false; @endphp
-                    <div class="w-10 h-10 flex items-center justify-center rounded-full
+                    <div class="w-10 h-10 flex items-center justify-center rounded-full 
                         {{ $booked ? 'bg-red-200 text-red-600' : 'bg-[#DCE7D8]' }}">
                         {{ $i }}
                     </div>
@@ -195,10 +202,9 @@
             </div>
         </div>
 
-        <!-- PRICING -->
         <div class="bg-[#7E8F78] rounded-3xl p-6 text-white shadow-sm">
             <h2 class="font-semibold mb-3">Pricing</h2>
-
+            
             <p class="text-4xl font-extrabold">
                 ₱{{ number_format($coordinator->rate ?? 0, 2) }}
             </p>
@@ -210,12 +216,20 @@
                 <li>✓ Client support</li>
             </ul>
 
-            <a href="{{ route('client.bookings.index') }}"
-               class="block w-full mt-6 py-3 rounded-2xl
-                      bg-white text-[#3E3F29] font-semibold
-                      hover:opacity-90 transition text-center">
-                Book Now
-            </a>
+            <form action="{{ route('client.bookings.store') }}" method="POST">
+                @csrf
+                <input type="hidden" name="coordinator_id" value="{{ $coordinatorUser->id }}">
+                <input type="hidden" name="event_date" value="{{ date('Y-m-d', strtotime('+1 week')) }}">
+                <input type="hidden" name="start_time" value="08:00">
+                <input type="hidden" name="end_time" value="17:00">
+                
+                <button type="button" onclick="window.location.href='{{ route('client.bookings.index') }}'" 
+                   class="block w-full mt-6 py-3 rounded-2xl 
+                          bg-white text-[#3E3F29] font-semibold 
+                          hover:opacity-90 transition text-center cursor-pointer">
+                    Book Now
+                </button>
+            </form>
         </div>
 
     </div>

@@ -10,9 +10,9 @@ use App\Models\Coordinator;
 use App\Models\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon; // Needed for date comparisons
 
 class ClientController extends Controller
 {
@@ -28,12 +28,23 @@ class ClientController extends Controller
             ->take(5)
             ->get();
 
-        // Calculate stats
-        $totalBookings = Booking::where('client_id', $user->id)->count();
-        $upcomingEvents = Booking::where('client_id', $user->id)->where('status', 'pending')->count();
-        $completedEvents = Booking::where('client_id', $user->id)->where('status', 'completed')->count();
+        // --- NEW DATE-BASED LOGIC ---
         
-        // Dashboard stats
+        $totalBookings = Booking::where('client_id', $user->id)->count();
+
+        // Upcoming: Date is Today or Future (and not cancelled)
+        $upcomingEvents = Booking::where('client_id', $user->id)
+            ->whereDate('event_date', '>=', Carbon::today())
+            ->where('status', '!=', 'cancelled')
+            ->count();
+
+        // Completed: Date is in the Past (and not cancelled)
+        $completedEvents = Booking::where('client_id', $user->id)
+            ->whereDate('event_date', '<', Carbon::today())
+            ->where('status', '!=', 'cancelled')
+            ->count();
+        
+        // Dashboard stats structure
         $stats = [
             [
                 'label' => 'My Bookings',
@@ -43,16 +54,18 @@ class ClientController extends Controller
             [
                 'label' => 'Upcoming Events',
                 'value' => $upcomingEvents,
-                'link'  => route('client.bookings.index', ['status' => 'pending']),
+                // Filter link for upcoming
+                'link'  => route('client.bookings.index'), 
             ],
             [
                 'label' => 'Completed Events',
                 'value' => $completedEvents,
-                'link'  => route('client.bookings.index', ['status' => 'completed']),
+                // Filter link for past
+                'link'  => route('client.bookings.index'),
             ],
         ];
 
-        // Top 4 coordinators
+        // Top 4 coordinators logic
         if (Schema::hasColumn('users', 'rating')) {
             $orderColumn = 'rating';
         } elseif (Schema::hasColumn('users', 'rate')) {
@@ -90,7 +103,7 @@ class ClientController extends Controller
         
         $booking->load(['event', 'coordinator.user']);
 
-        // Prevent "Table not found" error for services
+        // Prevent "Table not found" error by setting empty services list
         $booking->setRelation('services', collect());
 
         return view('client.booking.show', compact('booking'));
@@ -116,8 +129,6 @@ class ClientController extends Controller
                 ->withErrors(['coordinator_id' => 'Selected coordinator profile is missing. Please contact admin.']);
         }
 
-        $allowedTypes = is_array($coordinatorUser->event_types ?? null) ? ($coordinatorUser->event_types ?? []) : [];
-        
         $eventName = $request->event_type ?: 'Event';
 
         $event = Event::create([
@@ -149,7 +160,7 @@ class ClientController extends Controller
         $booking = Booking::where('client_id', Auth::id())->findOrFail($id);
 
         $request->validate([
-            'status' => 'required|in:pending,confirmed,cancelled',
+            'status' => 'required|in:pending,confirmed,cancelled,completed',
         ]);
 
         $booking->status = $request->status;
@@ -163,8 +174,7 @@ class ClientController extends Controller
     {
         $clientId = Auth::id();
 
-        // ✅ FIXED: Changed 'coordinator.user' to 'coordinator'
-        // The error confirmed that 'coordinator' is ALREADY the User model.
+        // Fixed relationship access
         $reviews = Reviews::with('coordinator')
             ->where('client_id', $clientId)
             ->orderByDesc('created_at')
