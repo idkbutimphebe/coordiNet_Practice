@@ -10,6 +10,8 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\BookingController;
 use App\Models\Event; // Add this at the top
+use App\Http\Controllers\ReviewController;
+
 
 /*
 |-------------------------------------------------------------------------- 
@@ -172,13 +174,11 @@ Route::middleware('auth')
         Route::post('/pay', [PaymentController::class, 'pay'])->name('pay');
 });
 
-
 /*
 |--------------------------------------------------------------------------
 | CLIENT
 |--------------------------------------------------------------------------
 */
-
 
 Route::middleware('auth')
     ->prefix('client')
@@ -190,10 +190,8 @@ Route::middleware('auth')
             ->name('dashboard');
 
         // ✅ COORDINATORS LIST
-
-
-Route::get('/coordinators', [ClientController::class, 'coordinators'])
-    ->name('coordinators');
+        Route::get('/coordinators', [ClientController::class, 'coordinators'])
+            ->name('coordinators');
 
         // ✅ VIEW SINGLE COORDINATOR
         Route::get('/coordinators/{id}', function ($id) {
@@ -202,6 +200,7 @@ Route::get('/coordinators', [ClientController::class, 'coordinators'])
         })->name('coordinators.view');
 
         // ✅ CLIENT BOOKINGS
+        // These now correctly point to ClientController
         Route::get('/bookings', [ClientController::class, 'bookings'])
             ->name('bookings.index');
 
@@ -211,7 +210,12 @@ Route::get('/coordinators', [ClientController::class, 'coordinators'])
         Route::post('/bookings', [ClientController::class, 'storeBooking'])
             ->name('bookings.store');
 
-        // ✅ RATINGS
+        // ✅ RATINGS (Store)
+        // Moved here from the deleted group so it still works
+        Route::post('/ratings', [RatingController::class, 'store'])
+            ->name('ratings.store');
+
+        // ✅ RATINGS (View)
         Route::get('/ratings', [ClientController::class, 'ratings'])
             ->name('ratings');
 
@@ -219,6 +223,5 @@ Route::get('/coordinators', [ClientController::class, 'coordinators'])
         Route::get('/profile', [ClientController::class, 'edit'])->name('profile');
         Route::put('/profile/update', [ClientController::class, 'updateProfile'])->name('profile.update');
     });
-
 
 require __DIR__ . '/auth.php';

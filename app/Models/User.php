@@ -110,4 +110,15 @@ public function eventType()
     return $this->belongsTo(EventType::class, 'event_type_id');
 }
 
+// Coordinator relationship
+public function bookingsAsCoordinator()
+{
+    return $this->hasMany(Booking::class, 'coordinator_id');
+}
+
+// Client relationship
+public function bookingsAsClient()
+{
+    return $this->hasMany(Booking::class, 'client_id');
+}
 }
