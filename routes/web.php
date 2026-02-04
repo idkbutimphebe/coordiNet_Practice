@@ -113,11 +113,13 @@ Route::middleware('auth')->prefix('coordinators')->group(function () {
 | 2. GENERAL PAGES
 |-------------------------------------------------------------------------- 
 */
-Route::middleware(['auth', 'admin'])->group(function () {
+
+Route::middleware('auth')->group(function () {
     Route::get('/pending', [AdminController::class, 'pending'])->name('pending');
     Route::patch('/coordinator/{id}/approve', [AdminController::class, 'approveCoordinator'])->name('approve');
     Route::delete('/coordinator/{id}/decline', [AdminController::class, 'declineCoordinator'])->name('decline');
 });
+
 
 
 // Route::get('/pending', [AdminController::class, 'pending'])->name('pending.coordinator');

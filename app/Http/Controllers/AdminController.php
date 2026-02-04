@@ -227,6 +227,15 @@ public function pending()
     return view('pending', compact('pendingCoordinators'));
 }
 
+public function __construct()
+{
+    $this->middleware(function ($request, $next) {
+        if (!auth()->check() || strtolower(auth()->user()->role) !== 'admin') {
+            abort(403, 'Unauthorized');
+        }
+        return $next($request);
+    });
+}
 
 
 
