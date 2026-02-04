@@ -74,7 +74,6 @@ class ClientController extends Controller
     {
         $user = Auth::user();
 
-        // Use 'event_date' for sorting to avoid "Column not found" errors
         $bookings = Booking::with(['event', 'coordinator.user'])
             ->where('client_id', $user->id)
             ->orderBy('event_date', 'desc') 
@@ -89,11 +88,9 @@ class ClientController extends Controller
             abort(403, 'Unauthorized access.');
         }
         
-        // ✅ FIX: Removed 'services' from here to stop the SQL error.
         $booking->load(['event', 'coordinator.user']);
 
-        // ✅ FIX: Manually set 'services' to an empty list.
-        // This prevents the "Table not found" error AND prevents the View from crashing.
+        // Prevent "Table not found" error for services
         $booking->setRelation('services', collect());
 
         return view('client.booking.show', compact('booking'));
@@ -120,10 +117,7 @@ class ClientController extends Controller
         }
 
         $allowedTypes = is_array($coordinatorUser->event_types ?? null) ? ($coordinatorUser->event_types ?? []) : [];
-        if ($request->filled('event_type') && !in_array($request->event_type, $allowedTypes, true)) {
-            // Optional validation
-        }
-
+        
         $eventName = $request->event_type ?: 'Event';
 
         $event = Event::create([
@@ -169,7 +163,9 @@ class ClientController extends Controller
     {
         $clientId = Auth::id();
 
-        $reviews = Reviews::with('coordinator.user')
+        // ✅ FIXED: Changed 'coordinator.user' to 'coordinator'
+        // The error confirmed that 'coordinator' is ALREADY the User model.
+        $reviews = Reviews::with('coordinator')
             ->where('client_id', $clientId)
             ->orderByDesc('created_at')
             ->get();
