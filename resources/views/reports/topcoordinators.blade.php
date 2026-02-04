@@ -40,38 +40,51 @@
                 <tr>
                     <th class="py-3 px-5 font-semibold">Rank</th>
                     <th class="py-3 px-5 font-semibold">Coordinator</th>
-                    <th class="py-3 px-5 font-semibold text-center">Bookings</th>
-                    <th class="py-3 px-5 font-semibold text-center">Rating</th>
+                    <th class="py-3 px-5 font-semibold text-center">
+                        Bookings
+                    </th>
+                    <th class="py-3 px-5 font-semibold text-center">
+                        Rating
+                    </th>
                 </tr>
             </thead>
 
             <tbody class="divide-y divide-[#778873]/20">
 
-                @forelse($topCoordinators as $index => $coordinator)
+                @php
+                    $topCoordinators = [
+                        ['1', 'Juan Dela Cruz', '28', '4.9 ⭐'],
+                        ['2', 'April Martinez', '25', '4.8 ⭐'],
+                        ['3', 'Mark Kevin', '23', '4.7 ⭐'],
+                        ['4', 'Lara Santos', '21', '5.0 ⭐'],
+                        ['5', 'Ryan Torres', '19', '4.6 ⭐'],
+                        ['6', 'Carla Perez', '18', '4.9 ⭐'],
+                        ['7', 'Joshua Nunez', '16', '4.8 ⭐'],
+                        ['8', 'Maria Bello', '15', '4.7 ⭐'],
+                        ['9', 'Alex Lim', '14', '4.9 ⭐'],
+                        ['10', 'Anna Reyes', '12', '4.8 ⭐'],
+                    ];
+                @endphp
+
+                @foreach($topCoordinators as [$rank, $name, $bookings, $rating])
                 <tr class="hover:bg-[#A1BC98]/20 transition">
                     <td class="py-3 px-5 font-bold text-[#3E3F29]">
-                        #{{ $index + 1 }}
+                        #{{ $rank }}
                     </td>
 
                     <td class="py-3 px-5 font-medium text-[#3E3F29]">
-                        {{ $coordinator->coordinator->coordinator_name ?? '—' }}
+                        {{ $name }}
                     </td>
 
                     <td class="py-3 px-5 text-center font-bold text-[#3E3F29]">
-                        {{ $coordinator['bookings_count'] ?? 0 }}
+                        {{ $bookings }}
                     </td>
 
                     <td class="py-3 px-5 text-center font-semibold text-[#3E3F29]">
-                        {{ $coordinator['ratings_avg'] !== null ? number_format($coordinator['ratings_avg'], 1) : '0.0' }} ⭐
+                        {{ $rating }}
                     </td>
                 </tr>
-                @empty
-                <tr>
-                    <td colspan="4" class="py-4 px-5 text-center text-gray-500">
-                        No Top 10 Coordinators found.
-                    </td>
-                </tr>
-                @endforelse
+                @endforeach
 
             </tbody>
         </table>

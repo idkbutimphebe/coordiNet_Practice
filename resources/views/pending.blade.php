@@ -14,7 +14,7 @@
     </div>
 
     <!-- SEARCH BAR -->
-    <form method="GET" class="flex items-center gap-3">
+    <div class="flex items-center gap-3">
         <div class="relative flex-1">
             <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[#3E3F29]/60">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -25,8 +25,6 @@
 
             <input
                 type="text"
-                name="search"
-                value="{{ request('search') }}"
                 placeholder="Search pending coordinators..."
                 class="w-full pl-10 pr-4 py-3 rounded-lg
                        bg-white border border-[#A1BC98]
@@ -38,14 +36,13 @@
         </div>
 
         <button
-            type="submit"
             class="px-6 py-3 rounded-lg
                    bg-[#3E3F29] text-white
                    text-sm font-semibold
                    hover:opacity-90 transition">
             Search
         </button>
-    </form>
+    </div>
 
     <!-- CARDS GRID -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
@@ -78,7 +75,26 @@
 
     <!-- PAGINATION -->
     <div class="mt-6 py-4 flex justify-center">
-        {{ $pendingCoordinators->links() }}
+        <nav class="flex items-center gap-2 text-sm">
+
+            <button disabled
+                class="px-2.5 py-1.5 rounded-md bg-[#778873] text-white opacity-40">
+                ‹
+            </button>
+
+            <button class="px-3 py-1.5 rounded-md bg-[#3E3F29] text-white font-medium">
+                1
+            </button>
+
+            <button class="px-3 py-1.5 rounded-md bg-[#A1BC98] text-[#3E3F29] hover:bg-[#778873] hover:text-white transition">
+                2
+            </button>
+
+            <button class="px-2.5 py-1.5 rounded-md bg-[#778873] text-white hover:bg-[#3E3F29] transition">
+                ›
+            </button>
+
+        </nav>
     </div>
 
 </div>

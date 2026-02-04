@@ -92,6 +92,19 @@
                 </div>
             @endif
 
+            @if(session('success'))
+                <div class="mb-6 p-4 bg-green-50 text-xs text-green-700 rounded-2xl border border-green-100 italic">    
+                    {{ session('success') }}
+                </div>
+            @endif
+
+            @if(session('info'))
+                <div class="mb-6 p-4 bg-blue-50 text-xs text-blue-700 rounded-2xl border border-blue-100 italic">
+                    {{ session('info') }}
+                </div>
+            @endif
+
+
             <form method="POST" action="{{ route('login') }}" class="space-y-7">
                 @csrf
 

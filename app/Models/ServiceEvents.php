@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class ServiceEvents extends Model
 {
@@ -20,7 +21,7 @@ class ServiceEvents extends Model
     {
         return $this->belongsTo(CoordinatorsInfo::class, 'coordinator_id');
     }
-    public function bookings()
+    public function bookings():BelongsToMany
     {
         return $this->belongsToMany(
             Bookings::class,

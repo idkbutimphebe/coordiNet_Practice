@@ -13,6 +13,102 @@
         </p>
     </div>
 
+ <!-- SEARCH BAR + FILTER -->
+<div class="flex flex-col md:flex-row gap-3 relative">
+
+    <!-- SEARCH INPUT -->
+    <input type="text"
+           name="search"
+           placeholder="Search by name or location..."
+           class="w-full md:flex-1 px-4 py-3 rounded-lg
+                  border border-[#A1BC98]
+                  focus:ring-2 focus:ring-[#778873]
+                  focus:outline-none text-sm">
+
+    <!-- BUTTONS -->
+    <div class="flex gap-3 relative">
+
+        <!-- FILTER DROPDOWN -->
+        <div class="relative">
+
+            <details id="filterDropdown" class="group">
+                <summary
+                    class="flex items-center gap-2 px-6 py-3 rounded-lg
+                           bg-[#3E3F29] text-white font-semibold text-sm
+                           cursor-pointer hover:opacity-90 transition
+                           list-none">
+
+                    <!-- ICON -->
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
+                         viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2
+                                 a1 1 0 01-.293.707L15 12.414V19
+                                 a1 1 0 01-.553.894l-4 2A1
+                                 1 0 019 21v-8.586L3.293
+                                 6.707A1 1 0 013 6V4z"/>
+                    </svg>
+
+                    <span id="filterLabel">All Events</span>
+                </summary>
+
+                <!-- DROPDOWN -->
+                <div
+                    class="absolute right-0 mt-2 w-56
+                           bg-white rounded-xl shadow-xl
+                           border border-gray-100 z-20">
+
+                    <!-- WEDDING (MOST CUSTOMERS - FIRST) -->
+                    <label class="flex items-center gap-3 px-4 py-3 text-sm
+                                  hover:bg-[#F6F8F5] cursor-pointer rounded-t-xl">
+                        <input type="radio" name="event_type" value="wedding"
+                               class="hidden peer"
+                               onclick="selectFilter('Wedding')">
+                        <span class="w-4 h-4 rounded-full border border-gray-400
+                                     peer-checked:bg-[#3E3F29]"></span>
+                        Wedding
+                    </label>
+
+                    <!-- BIRTHDAY -->
+                    <label class="flex items-center gap-3 px-4 py-3 text-sm
+                                  hover:bg-[#F6F8F5] cursor-pointer">
+                        <input type="radio" name="event_type" value="birthday"
+                               class="hidden peer"
+                               onclick="selectFilter('Birthday')">
+                        <span class="w-4 h-4 rounded-full border border-gray-400
+                                     peer-checked:bg-[#3E3F29]"></span>
+                        Birthday 
+                    </label>
+
+                    <!-- OTHERS -->
+                    <label class="flex items-center gap-3 px-4 py-3 text-sm
+                                  hover:bg-[#F6F8F5] cursor-pointer rounded-b-xl">
+                        <input type="radio" name="event_type" value="others"
+                               class="hidden peer"
+                               onclick="selectFilter('Others')">
+                        <span class="w-4 h-4 rounded-full border border-gray-400
+                                     peer-checked:bg-[#3E3F29]"></span>
+                        Other Events
+                    </label>
+
+                </div>
+            </details>
+
+        </div>
+
+        <!-- SEARCH BUTTON -->
+        <button type="submit"
+                class="px-8 py-3 rounded-lg
+                       bg-[#3E3F29] text-white font-semibold text-sm
+                       hover:opacity-90 transition">
+            Search
+        </button>
+
+    </div>
+</div>
+
+
+    <!-- SEARCH BAR + FILTER -->
     <form method="GET" class="flex flex-col md:flex-row gap-3 relative">
 
         <input type="text"
