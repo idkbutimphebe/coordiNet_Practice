@@ -90,11 +90,16 @@
             <!-- Logout -->
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
-                <button class="flex items-center gap-3 w-full px-4 py-2 rounded hover:bg-red-500/30 transition">
+                <button
+                    class="flex items-center gap-3 w-full px-4 py-2 rounded
+                           hover:bg-red-500/30 text-left transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                              d="M17 16l4-4m0 0l-4-4m4 4H7M7 4h6v4"/>
+                              
+                        d="M17 16l4-4m0 0l-4-4m4 4H7
+                        M7 4h6v4"/>
                     </svg>
+                    
                     <span>Logout</span>
                 </button>
             </form>

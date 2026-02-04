@@ -13,8 +13,16 @@
 
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
 
+    @php
+        $stats = [
+            ['label'=>'Total Users','value'=>'3,000','icon'=>'users'],
+            ['label'=>'Total Bookings','value'=>'1,250','icon'=>'calendar'],
+            ['label'=>'Pending Coordinators','value'=>'50','icon'=>'clock'],
+        ];
+    @endphp
+
     @foreach($stats as $stat)
-    <a href="{{ $stat['route'] }}" 
+    <a href="{{ $stat['route'] ?? '#' }}" 
        class="bg-gradient-to-r from-[#778873] to-[#3E3F29]
                 rounded-2xl text-white p-6 shadow-md
                 flex items-center gap-4 transition-all duration-300 

@@ -68,26 +68,40 @@
 
 <body class="min-h-screen">
 
-    <nav class="glass-nav sticky top-0 z-50 px-8 py-5">
+<div class="max-w-3xl mx-auto mt-6">
+    @if(session('info'))
+        <div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4">
+            {{ session('info') }}
+        </div>
+    @endif
+
+    @if(session('success'))
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+            {{ session('success') }}
+        </div>
+    @endif
+</div>
+
+<nav class="glass-nav sticky top-0 z-50 px-8 py-5">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="text-3xl font-bold tracking-tighter italic">
                 Coordinator<span class="text-[10px] ml-1 not-italic opacity-40 font-normal">SYSTEM</span>
             </div>
             
             <div class="flex items-center gap-10 text-[11px] font-bold uppercase tracking-[0.2em]">
-                @if (Route::has('login'))
-                    @auth
-                        @php
-                            $role = auth()->user()->role;
-                            // Logic to find the correct dashboard route based on user role
-                            $dashboard = ($role === 'admin') ? 'dashboard' : $role . '.dashboard';
-                        @endphp
-                        <a href="{{ route($dashboard) }}" class="hover:opacity-60 transition">Go to Dashboard</a>
-                    @else
-                        <a href="{{ route('login') }}" class="hover:opacity-60 transition">Sign In</a>
-                        <a href="{{ route('register') }}" class="btn-luxury px-8 py-3 rounded-full">Reserve Access</a>
-                    @endauth
-                @endif
+  @if (Route::has('login'))
+    <div class="hidden fixed top-0 right-0 px-6 py-4 sm:block">
+        @auth
+            <a href="{{ url('/dashboard') }}" class="text-sm text-gray-700 underline">Dashboard</a>
+        @else
+            <a href="{{ route('login') }}" class="text-sm text-gray-700 underline">Sign in</a>
+
+            @if (Route::has('register'))
+                <a href="{{ route('register') }}" class="ml-4 text-sm text-gray-700 underline">Register</a>
+            @endif
+        @endauth
+    </div>
+@endif              
             </div>
         </div>
     </nav>

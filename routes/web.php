@@ -12,6 +12,29 @@ use App\Http\Controllers\BookingController;
 use App\Models\Event; // Add this at the top
 use App\Http\Controllers\ReviewController;
 
+use App\Http\Controllers\ClientDashboardController;
+use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use Illuminate\Support\Facades\Auth;
+
+/*
+|--------------------------------------------------------------------------
+| ROOT
+|--------------------------------------------------------------------------
+*/
+Route::get('/', function () {
+
+    if (!Auth::check()) {
+        return view('welcome');
+    }
+
+    return match (Auth::user()->role) {
+        'admin'       => redirect()->route('dashboard'),
+        'coordinator' => redirect()->route('coordinator.dashboard'),
+        'client'      => redirect()->route('client.dashboard'),
+        default       => redirect('/login'),
+    };
+});
 
 /*
 |-------------------------------------------------------------------------- 
@@ -23,17 +46,31 @@ use App\Http\Controllers\ReviewController;
 */
 // ROOT
 Route::get('/', function () {
-    if (!auth()->check()) {
+    if (!Auth::check()) {
         return view('welcome');
     }
 
-    return match (auth()->user()->role) {
+    return match (Auth::user()->role) {
         'admin'       => redirect()->route('dashboard'),
         'coordinator' => redirect()->route('coordinator.dashboard'),
         'client'      => redirect()->route('client.dashboard'),
         default       => redirect('/login'),
     };
 });
+// Registration
+Route::get('register', [RegisteredUserController::class, 'create'])->name('register');
+Route::post('register', [RegisteredUserController::class, 'store']);
+
+// Login
+Route::get('login', [AuthenticatedSessionController::class, 'create'])->name('login');
+Route::post('login', [AuthenticatedSessionController::class, 'store']);
+
+// Dashboard (role-based)
+Route::middleware(['auth', 'role:client'])->group(function() {
+    Route::get('/client/dashboard', [ClientDashboardController::class, 'index'])->name('client.dashboard');
+});
+
+// Coordinator dashboard routes are defined later under the 'coordinator' prefix.
 
 // AUTH ROUTES
 Route::middleware(['auth'])->group(function () {
@@ -97,6 +134,15 @@ Route::middleware('auth')->group(function () {
 
     Route::delete('/profile', [ProfileController::class, 'destroy'])
         ->name('profile.destroy');
+    Route::get('/profile', [ProfileController::class, 'edit'])
+        ->name('profile.edit');
+
+    Route::patch('/profile', [ProfileController::class, 'update'])
+        ->name('profile.update');
+
+    Route::delete('/profile', [ProfileController::class, 'destroy'])
+        ->name('profile.destroy');
+
 });
 
 /*
@@ -105,10 +151,6 @@ Route::middleware('auth')->group(function () {
 |-------------------------------------------------------------------------- 
 */
 Route::middleware('auth')->prefix('coordinators')->group(function () {
-    Route::get('/', [CoordinatorController::class, 'index'])->name('coordinators');
-    Route::get('/{event}', [CoordinatorController::class, 'byEvent'])->name('coordinators.event');
-    Route::get('/{event}/{id}', [CoordinatorController::class, 'show'])->name('coordinators.show');
-});
 
 /*
 |-------------------------------------------------------------------------- 
@@ -126,6 +168,22 @@ Route::middleware(['auth', 'admin'])->group(function () {
 // Route::patch('/coordinator/{id}/approve', [AdminController::class, 'approveCoordinator'])->name('pending.coordinator.approve');
 // Route::delete('/coordinator/{id}/decline', [AdminController::class, 'declineCoordinator'])->name('pending.coordinator.decline');
 
+    Route::get('/', [CoordinatorController::class, 'index'])
+        ->name('coordinators');
+
+    Route::get('/{event}', [CoordinatorController::class, 'byEvent'])
+        ->name('coordinators.event');
+
+    Route::get('/{event}/{id}', [CoordinatorController::class, 'show'])
+        ->name('coordinators.show');
+
+});
+Route::middleware('auth')->group(function () {
+
+    Route::get('/pendng', fn () =>
+        view('pending')
+    )->name('pending');
+    });
 
 /*
 |-------------------------------------------------------------------------- 
@@ -137,8 +195,6 @@ Route::middleware('auth')
     ->name('coordinator.')
     ->group(function () {
 
-        // Dashboard
-        Route::get('/dashboard', [CoordinatorController::class, 'dashboard'])->name('dashboard');
 
         // Bookings
         Route::get('/bookings', [CoordinatorController::class, 'bookings'])->name('bookings');
@@ -151,12 +207,17 @@ Route::middleware('auth')
         Route::get('/schedule-events', [CoordinatorController::class, 'getScheduleEvents'])->name('events');
         Route::post('/schedule/save', [CoordinatorController::class, 'saveEvent'])->name('schedule.save');
 
-        // Ratings
-        Route::get('/ratings', [CoordinatorController::class, 'reviews'])->name('ratings');
+        Route::get('/schedule', fn () =>
+            view('coordinator.schedule')
+        )->name('schedule');
 
-        // Income & Subscription (Static Views)
-        Route::get('/income', fn () => view('coordinator.income'))->name('income');
-        Route::get('/subscription', fn () => view('coordinator.subscription'))->name('subscription');
+        Route::get('/ratings', fn () =>
+            view('coordinator.ratings')
+        )->name('ratings');
+
+        Route::get('/income', fn () =>
+            view('coordinator.income')
+        )->name('income');
 
         // Profile
         Route::get('/profile', [CoordinatorController::class, 'profile'])->name('profile');
