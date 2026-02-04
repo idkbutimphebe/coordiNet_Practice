@@ -6,7 +6,8 @@ use App\Models\Booking;
 use App\Models\Schedule;
 use App\Models\Reviews;
 use App\Models\User;
-use App\Models\Coordinator; // Added this to access Coordinator model
+use App\Models\Event;
+use App\Models\Coordinator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -18,19 +19,12 @@ class CoordinatorController extends Controller
 {
     // ================= ADDED METHODS TO FIX ERRORS =================
     
-    /**
-     * Display a listing of the coordinators.
-     * This fixes the "Undefined method index" error.
-     */
     public function index()
     {
         $coordinators = Coordinator::with('user')->paginate(10);
         return view('coordinators.index', compact('coordinators'));
     }
 
-    /**
-     * Handle the coordinators list specifically if named differently in routes.
-     */
     public function coordinators()
     {
         return $this->index();
@@ -39,9 +33,16 @@ class CoordinatorController extends Controller
     // ================= DASHBOARD =================
     public function dashboard()
     {
-        $pendingBookings = Booking::where('status', 'pending')->get();
-        $completedBookings = Booking::where('status', 'completed')->count();
-        $upcomingEvents = Booking::whereDate('booking_date', '>=', now())->count();
+        $pendingBookings = Booking::where('coordinator_id', Auth::id())
+            ->where('status', 'pending')
+            ->with('client')
+            ->get();
+
+        $completedBookings = Booking::where('coordinator_id', Auth::id())
+            ->where('status', 'completed')->count();
+
+        $upcomingEvents = Booking::where('coordinator_id', Auth::id())
+            ->whereDate('event_date', '>=', now())->count();
 
         $stats = [
             [
@@ -67,7 +68,8 @@ class CoordinatorController extends Controller
         $statusChart = [
             'completed' => $completedBookings,
             'pending'   => $pendingBookings->count(),
-            'cancelled' => Booking::where('status', 'cancelled')->count(),
+            'cancelled' => Booking::where('coordinator_id', Auth::id())
+                ->where('status', 'cancelled')->count(),
         ];
 
         $activityLabels = [];
@@ -75,7 +77,10 @@ class CoordinatorController extends Controller
         for ($i = 6; $i >= 0; $i--) {
             $date = now()->subDays($i);
             $activityLabels[] = $date->format('D');
-            $activityData[]   = Booking::whereDate('booking_date', $date)->count();
+            $activityData[] = Booking::whereDate('event_date', $date)
+                         ->where('coordinator_id', Auth::id())
+                         ->count();
+
         }
 
         return view('coordinator.dashboard', compact(
@@ -86,27 +91,43 @@ class CoordinatorController extends Controller
     // ================= BOOKINGS LIST =================
     public function bookings(Request $request)
     {
-        $query = Booking::with('client.user');
+        $query = Booking::where('coordinator_id', Auth::id())
+            ->with('client');
 
         if ($request->has('status') && $request->status) {
             $query->where('status', $request->status);
         }
 
         if ($request->has('search') && $request->search) {
-            $query->whereHas('client.user', function ($q) use ($request) {
+            $query->whereHas('client', function ($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->search . '%');
             });
         }
 
-        $bookings = $query->orderBy('booking_date', 'desc')->paginate(10);
+        $bookings = $query->$orderBy = $request->get('orderBy', 'created_at')->paginate(10);
         return view('coordinator.bookings', compact('bookings'));
     }
 
     // ================= SINGLE BOOKING =================
     public function bookingsShow($id)
     {
-        $booking = Booking::with('client.user')->findOrFail($id);
+        $booking = Booking::with('client')->findOrFail($id);
         return view('coordinator.bookings-show', compact('booking'));
+    }
+
+    // ================= UPDATE BOOKING STATUS =================
+    public function updateBooking(Request $request, $id)
+    {
+        $booking = Booking::where('coordinator_id', Auth::id())->findOrFail($id);
+
+        $request->validate([
+            'status' => 'required|in:pending,confirmed,cancelled',
+        ]);
+
+        $booking->status = $request->status;
+        $booking->save();
+
+        return back()->with('success', "Booking {$request->status} successfully!");
     }
 
     // ================= SCHEDULE PAGE =================
@@ -121,15 +142,15 @@ class CoordinatorController extends Controller
         $events = [];
         $coordinatorId = Auth::id();
 
-        // 1. Fetch Client Bookings
-        $bookings = Booking::with('client.user')
+        $bookings = Booking::with('client')
+            ->where('coordinator_id', $coordinatorId)
             ->where('status', '!=', 'cancelled')
             ->get();
 
         foreach ($bookings as $booking) {
             $events[] = [
                 'id' => 'booking-' . $booking->id,
-                'title' => 'Client: ' . ($booking->client->user->name ?? 'Booking'),
+                'title' => 'Client: ' . ($booking->client->name ?? 'Booking'),
                 'start' => $booking->booking_date,
                 'backgroundColor' => '#3E3F29',
                 'borderColor' => '#3E3F29',
@@ -141,7 +162,6 @@ class CoordinatorController extends Controller
             ];
         }
 
-        // 2. Fetch Personal Schedules
         try {
             $schedules = Schedule::where('coordinator_id', $coordinatorId)->get();
 
@@ -166,7 +186,7 @@ class CoordinatorController extends Controller
         return response()->json($events);
     }
 
-    // ================= SAVE EVENT (FIXED) =================
+    // ================= SAVE EVENT =================
     public function saveEvent(Request $request)
     {
         $request->validate([
@@ -221,64 +241,84 @@ class CoordinatorController extends Controller
         return view('coordinator.ratings', compact('reviews', 'formattedAvg', 'totalReviews'));
     }
 
-    // ================= PROFILE (SHOW) =================
+    // ================= PROFILE =================
     public function profile()
     {
         $user = Auth::user();
         return view('coordinator.profile', compact('user'));
     }
 
-    // ================= PROFILE (UPDATE) =================
-    public function updateProfile(Request $request)
-    {
-        $user = Auth::user();
+public function updateProfile(Request $request)
+{
+    $user = Auth::user();
 
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,' . $user->id,
-            'portfolio.*.image' => 'nullable|image|max:2048', 
-            'rate' => 'nullable|numeric',
-            'password' => 'nullable|min:8|confirmed',
-        ]);
+    $request->validate([
+        'name'     => 'required|string|max:255',
+        'email'    => 'required|email|unique:users,email,' . $user->id,
+        'avatar'   => 'nullable|file|max:2048',
+        'password' => 'nullable|string|min:6|confirmed',
+        'services' => 'nullable|array', // ensure services checkboxes save
+        'rate'     => 'nullable|numeric|min:0',
+        'is_active'=> 'nullable|boolean',
+        'bio'      => 'nullable|string|max:1000',
+        'location' => 'nullable|string|max:255',
+        'title'    => 'nullable|string|max:255',
+        'event_type_id' => 'nullable|exists:event_types,id',
 
-        $currentPortfolio = is_string($user->portfolio) ? json_decode($user->portfolio, true) : ($user->portfolio ?? []);
-        
-        if ($request->has('portfolio')) {
-            foreach ($request->portfolio as $key => $item) {
-                if (isset($item['image']) && $item['image'] instanceof \Illuminate\Http\UploadedFile) {
-                    $path = $item['image']->store('portfolio', 'public');
-                    $currentPortfolio[$key]['image'] = $path;
-                }
-                if (isset($item['desc'])) {
-                    $currentPortfolio[$key]['desc'] = $item['desc'];
-                }
-            }
-        }
+    ]);
 
-        $user->name = $request->name;
-        $user->title = $request->title;
-        $user->phone = $request->phone;
-        $user->location = $request->location;
-        $user->bio = $request->bio;
-        $user->rate = $request->rate;
-        $user->is_active = $request->is_active; 
-        
-        $user->services = $request->services ?? [];
-        $user->portfolio = $currentPortfolio;
+    // ================= UPDATE USER INFO =================
+    $user->name      = $request->name;
+    $user->email     = $request->email;
+    $user->phone     = $request->phone ?? $user->phone;
+    $user->location  = $request->location ?? $user->location;
+    $user->title     = $request->title ?? $user->title;
+    $user->bio       = $request->bio ?? $user->bio;
+    $user->rate      = $request->rate ?? $user->rate;
+    $user->is_active = $request->has('is_active') ? $request->is_active : 0;
 
-        if ($request->hasFile('avatar')) {
-            if ($user->avatar) {
-                Storage::disk('public')->delete($user->avatar);
-            }
-            $user->avatar = $request->file('avatar')->store('avatars', 'public');
-        }
+    // ================= UPDATE SERVICES =================
+    $user->services = $request->services ? json_encode($request->services) : json_encode([]);
 
-        if ($request->filled('password')) {
-            $user->password = Hash::make($request->password);
-        }
-
-        $user->save();
-
-        return back()->with('success', 'Profile updated successfully!');
+    // ================= UPDATE PASSWORD =================
+    if ($request->password) {
+        $user->password = Hash::make($request->password);
     }
+
+    // ================= UPDATE AVATAR =================
+    if ($request->hasFile('avatar') && $request->file('avatar')->isValid()) {
+        if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+            Storage::disk('public')->delete($user->avatar);
+        }
+        $user->avatar = $request->file('avatar')->store('avatars/coordinators', 'public');
+    }
+
+    $user->save();
+
+    // ================= SYNC EVENT TYPES =================
+    $coordinatorId = $user->coordinator->id ?? null;
+
+  $user->event_type_id = $request->event_type_id; // this will save the selected dropdown
+    $user->save();
+
+    return redirect()->route('coordinator.profile')->with('success', 'Profile updated successfully!');
+}
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            if (!auth()->check() || auth()->user()->role !== 'coordinator') {
+                abort(403, 'Unauthorized.');
+            }
+            if (!auth()->user()->is_active) {
+                auth()->logout();
+                return redirect()->route('login')->with('error', 'Your account is pending admin approval.');
+            }
+            return $next($request);
+        });
+    }
+
+//  $user->save();
+
+//     return redirect()->route('coordinator.profile')->with('success', 'Profile updated successfully!');
+// }
 }

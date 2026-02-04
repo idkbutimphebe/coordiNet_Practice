@@ -95,7 +95,7 @@
                                 group-hover:bg-[#778873]/80
                                 group-hover:text-white
                                 transition">
-                        {{ strtoupper(substr($coordinator->coordinator_name, 0, 2)) }}
+                        {{ strtoupper(substr($coordinator?->coordinator_name ?? '', 0, 2)) }}
                     </div>
 
                     <!-- INFO -->

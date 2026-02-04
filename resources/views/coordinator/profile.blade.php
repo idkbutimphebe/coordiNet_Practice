@@ -118,6 +118,47 @@
                     </div>
                 </div>
 
+ {{-- Event Types (Fixed List) --}}
+<div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+    <h2 class="font-bold text-[#3E3F29] mb-4 text-lg">Event Types You Handle</h2>
+
+    @php
+        // Available event types
+        $availableEvents = ['Wedding', 'Birthday', 'Debut', 'Corporate', 'Anniversary', 'Baby Shower', 'Graduation', 'Engagement'];
+
+        // Get coordinator
+        $coordinator = auth()->user()->coordinator;
+
+        // Get existing events from database
+        $dbEvents = $coordinator && $coordinator->events ? $coordinator->events->pluck('event_type')->toArray() : [];
+
+        // Merge old input with database values
+        $currentEvents = old('event_types', $dbEvents) ?? [];
+    @endphp
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+        @foreach($availableEvents as $event)
+            <label class="cursor-pointer relative">
+                <input type="checkbox" name="event_types[]" value="{{ $event }}"
+                       class="peer sr-only"
+                       {{ in_array($event, $currentEvents) ? 'checked' : '' }}>
+                <div class="flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-200 bg-white border-gray-200 text-gray-500 hover:bg-gray-50 peer-checked:bg-[#F6F8F5] peer-checked:border-[#A1BC98] peer-checked:text-[#3E3F29] peer-checked:font-bold">
+                    <div class="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center peer-checked:border-[#778873] peer-checked:bg-[#778873] transition-colors">
+                        <svg class="w-3 h-3 text-white opacity-0 peer-checked:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    {{ $event }}
+                </div>
+            </label>
+        @endforeach
+    </div>
+
+    <p class="text-xs text-gray-400 mt-2">Select the event types you handle. You can check multiple options.</p>
+</div>
+
+
+
                 {{-- Portfolio (FIXED) --}}
                 <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                     <h2 class="font-bold text-[#3E3F29] mb-4 text-lg">Portfolio</h2>

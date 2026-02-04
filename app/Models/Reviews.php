@@ -12,19 +12,21 @@ class Reviews extends Model
         'client_id',
         'coordinator_id',
         'rating',
-        'feedback'
+        'feedback',
     ];
 
-    public function booking():BelongsTo
+    public function booking(): BelongsTo
     {
-        return $this->belongsTo(Bookings::class);
+        return $this->belongsTo(Booking::class);
     }
-    public function client():BelongsTo
+
+    public function client(): BelongsTo
     {
-        return $this->belongsTo(clientinfo::class,'client_id');
+        return $this->belongsTo(\App\Models\User::class, 'client_id'); // points to users table
     }
-    public function coordinator():BelongsTo
+
+    public function coordinator(): BelongsTo
     {
-        return $this->belongsTo(CoordinatorsInfo::class,'coordinator_id');
+        return $this->belongsTo(\App\Models\User::class, 'coordinator_id'); // points to users table
     }
 }

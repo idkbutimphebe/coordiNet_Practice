@@ -23,19 +23,24 @@
                 </svg>
             </span>
 
-            <input
-                type="text"
-                placeholder="Search bookings..."
-                class="w-full pl-10 pr-4 py-3 rounded-lg
-                       bg-white border border-[#A1BC98]
-                       text-sm text-[#3E3F29]
-                       placeholder-[#3E3F29]/60
-                       focus:outline-none focus:ring-2
-                       focus:ring-[#778873]"
-            >
+            <form method="GET" action="{{ route('client.bookings.index') }}">
+                <input
+                    type="text"
+                    name="search"
+                    placeholder="Search bookings..."
+                    class="w-full pl-10 pr-4 py-3 rounded-lg
+                           bg-white border border-[#A1BC98]
+                           text-sm text-[#3E3F29]
+                           placeholder-[#3E3F29]/60
+                           focus:outline-none focus:ring-2
+                           focus:ring-[#778873]"
+                    value="{{ request('search') }}"
+                >
+            </form>
         </div>
 
         <button
+            onclick="document.querySelector('form').submit();"
             class="px-6 py-3 rounded-lg
                    bg-[#3E3F29] text-white
                    text-sm font-semibold
@@ -45,7 +50,7 @@
     </div>
 
     <!-- TABLE CARD -->
-    <div class="bg-white rounded-3xl shadow-sm overflow-hidden">
+    <div class="bg-white rounded-3xl shadow-sm overflow-x-auto">
 
         <table class="w-full text-sm">
             <thead class="bg-[#DCE7D8] text-[#3E3F29]">
@@ -59,46 +64,36 @@
             </thead>
 
             <tbody class="divide-y divide-[#A1BC98]/40">
-
-                @php
-                    $bookings = [
-                        ['id' => 1, 'event' => 'Wedding', 'date' => 'Dec 15, 2025', 'coordinator' => 'Juan Dela Cruz', 'status' => 'Completed'],
-                        ['id' => 2, 'event' => 'Birthday', 'date' => 'Jan 10, 2026', 'coordinator' => 'Maria Santos', 'status' => 'Pending'],
-                        ['id' => 3, 'event' => 'Corporate', 'date' => 'Feb 02, 2026', 'coordinator' => 'Alex Lim', 'status' => 'Cancelled'],
-                    ];
-                @endphp
-
-                @foreach($bookings as $booking)
+                @forelse($bookings as $booking)
                 <tr class="hover:bg-[#F6F8F5] transition">
                     <td class="py-4 px-6 font-medium text-[#3E3F29]">
-                        {{ $booking['event'] }}
+                        {{ $booking->event->name ?? 'N/A' }}
                     </td>
 
                     <td class="py-4 px-6 text-gray-600">
-                        {{ $booking['date'] }}
+                        {{ $booking->event_date->format('M d, Y') ?? 'N/A' }}
                     </td>
 
                     <td class="py-4 px-6 text-gray-700">
-                        {{ $booking['coordinator'] }}
+                        {{ $booking->coordinator->name ?? 'N/A' }}
                     </td>
 
-                    <!-- ✅ FIXED UNIFORM STATUS COLORS -->
                     <td class="py-4 px-6">
                         <span class="inline-flex items-center px-4 py-1.5
                             rounded-full text-xs font-semibold
-                            @if($booking['status'] === 'Completed')
+                            @if($booking->status === 'Completed')
                                 bg-[#A1BC98] text-[#3E3F29]
-                            @elseif($booking['status'] === 'Cancelled')
+                            @elseif($booking->status === 'Cancelled')
                                 bg-[#A1BC98]/40 text-[#3E3F29]
                             @else
                                 bg-[#A1BC98]/20 text-[#3E3F29]
                             @endif">
-                            {{ $booking['status'] }}
+                            {{ ucfirst($booking->status) }}
                         </span>
                     </td>
 
                     <td class="py-4 px-6 text-center">
-                        <a href="{{ route('client.bookings.show', $booking['id']) }}"
+                        <a href="{{ route('client.bookings.show', $booking->id) }}"
                            class="inline-block px-5 py-1.5 rounded-lg
                                   bg-[#778873] text-white
                                   text-xs font-medium
@@ -107,32 +102,20 @@
                         </a>
                     </td>
                 </tr>
-                @endforeach
-
+                @empty
+                <tr>
+                    <td colspan="5" class="text-center py-12 text-[#3E3F29]">
+                        No bookings found.
+                    </td>
+                </tr>
+                @endforelse
             </tbody>
         </table>
     </div>
 
     <!-- PAGINATION -->
     <div class="flex justify-center mt-6">
-        <nav class="flex items-center gap-2 text-sm">
-
-            <button disabled
-                class="px-3 py-1.5 rounded-md bg-[#778873]
-                       text-white opacity-40">
-                ‹
-            </button>
-
-            <button class="px-3 py-1.5 rounded-md
-                           bg-[#3E3F29] text-white font-medium">
-                1
-            </button>
-
-            <button class="px-3 py-1.5 rounded-md bg-[#778873] text-white">
-                ›
-            </button>
-
-        </nav>
+        {{ $bookings->links() }}
     </div>
 
 </div>

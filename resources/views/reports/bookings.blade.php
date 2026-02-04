@@ -36,43 +36,49 @@
     <div class="bg-white rounded-2xl shadow-sm overflow-hidden print:shadow-none">
 
         <table class="w-full text-sm text-left">
-            <thead class="bg-[#A1BC98]/40 text-[#3E3F29]">
-                <tr>
-                    <th class="py-3 px-5 font-semibold">#</th>
-                    <th class="py-3 px-5 font-semibold">Client</th>
-                    <th class="py-3 px-5 font-semibold">Event</th>
-                    <th class="py-3 px-5 font-semibold">Coordinator</th>
-                    <th class="py-3 px-5 font-semibold">Schedule</th>
-                    <th class="py-3 px-5 font-semibold">Status</th>
-                </tr>
-            </thead>
+    <thead class="bg-[#A1BC98]/40 text-[#3E3F29]">
+        <tr>
+            <th class="py-3 px-5 font-semibold">#</th>
+            <th class="py-3 px-5 font-semibold">Client</th>
+            <th class="py-3 px-5 font-semibold">Event</th>
+            <th class="py-3 px-5 font-semibold">Coordinator</th>
+            <th class="py-3 px-5 font-semibold">Schedule</th>
+            <th class="py-3 px-5 font-semibold">Status</th>
+        </tr>
+    </thead>
 
-            <tbody class="divide-y divide-[#778873]/20">
-                @forelse($bookings as $booking)
-                <tr class="hover:bg-[#A1BC98]/20 transition print:hover:bg-transparent">
-                    <td class="py-3 px-5 font-bold text-[#3E3F29]">{{ $booking->id }}</td>
-                    <td class="py-3 px-5 text-[#3E3F29]">{{ $booking->client->name ?? 'N/A' }}</td>
-                    <td class="py-3 px-5 text-gray-700">{{ $booking->event->name ?? 'N/A' }}</td>
-                    <td class="py-3 px-5 text-gray-700">{{ $booking->event->coordinator->coordinator_name ?? 'N/A' }}</td>
-                    <td class="py-3 px-5 text-gray-700">{{ \Carbon\Carbon::parse($booking->booking_date)->format('M d, Y') }}</td>
-                    <td class="py-3 px-5">
-                        <span class="inline-block px-3 py-1 text-xs rounded-full
-                            {{ $booking->status === 'approved'
-                                ? 'bg-[#A1BC98] text-[#3E3F29]'
-                                : ($booking->status === 'pending' ? 'bg-yellow-200 text-yellow-800' : 'bg-red-200 text-red-800') }}">
-                            {{ ucfirst($booking->status) }}
-                        </span>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="6" class="py-4 px-5 text-center text-gray-500">
-                        No bookings found.
-                    </td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
+    <tbody class="divide-y divide-[#778873]/20">
+        @forelse($bookings as $booking)
+            <tr class="hover:bg-[#A1BC98]/20 transition print:hover:bg-transparent">
+                <td class="py-3 px-5 font-bold text-[#3E3F29]">{{ $booking->id }}</td>
+                <td class="py-3 px-5 text-[#3E3F29]">{{ $booking->client->name ?? 'N/A' }}</td>
+                <td class="py-3 px-5 text-gray-700">{{ $booking->event->name ?? $booking->event_name ?? 'N/A' }}</td>
+                <td class="py-3 px-5 text-gray-700">{{ $booking->event->coordinator->coordinator_name ?? 'N/A' }}</td>
+                <td class="py-3 px-5 text-gray-700">
+                    {{ \Carbon\Carbon::parse($booking->event_date)->format('M d, Y') }}
+                    <br>
+                    {{ \Carbon\Carbon::parse($booking->start_time)->format('h:i A') }} -
+                    {{ \Carbon\Carbon::parse($booking->end_time)->format('h:i A') }}
+                </td>
+                <td class="py-3 px-5">
+                    <span class="inline-block px-3 py-1 text-xs rounded-full
+                        {{ $booking->status === 'confirmed'
+                            ? 'bg-[#A1BC98] text-[#3E3F29]'
+                            : ($booking->status === 'pending' ? 'bg-yellow-200 text-yellow-800' : 'bg-red-200 text-red-800') }}">
+                        {{ ucfirst($booking->status) }}
+                    </span>
+                </td>
+            </tr>
+        @empty
+            <tr>
+                <td colspan="6" class="py-4 px-5 text-center text-gray-500">
+                    No bookings found.
+                </td>
+            </tr>
+        @endforelse
+    </tbody>
+</table>
+
 
     </div>
 
