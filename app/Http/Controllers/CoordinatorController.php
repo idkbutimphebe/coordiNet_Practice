@@ -250,23 +250,51 @@ class CoordinatorController extends Controller
         return view('coordinator.profile', compact('user'));
     }
 
-    public function updateProfile(Request $request)
-    {
-        $user = Auth::user();
-        $request->validate([
-            'name'=>'required|string|max:255',
-            'email'=>'required|email|unique:users,email,'.$user->id,
-            'avatar'=>'nullable|file|max:2048',
-            'profile_photo'=>'nullable|image|max:2048',
-            'password'=>'nullable|string|min:6|confirmed',
-            'services'=>'nullable|array',
-            'event_types'=>'nullable|array',
-            'rate'=>'nullable|numeric|min:0',
-            'is_active'=>'nullable|boolean',
-            'bio'=>'nullable|string|max:1000',
-            'location'=>'nullable|string|max:255',
-            'title'=>'nullable|string|max:255',
-        ]);
+public function updateProfile(Request $request)
+{
+    /** @var \App\Models\User $user */
+    $user = Auth::user();
+
+    $request->validate([
+        'name'     => 'required|string|max:255',
+        'email'    => 'required|email|unique:users,email,' . $user->id,
+        'avatar'   => 'nullable|file|max:2048',
+        'password' => 'nullable|string|min:6|confirmed',
+        'services' => 'nullable|array', 
+        'event_types' => 'nullable|array',
+        'rate'     => 'nullable|numeric|min:0',
+        'is_active'=> 'nullable|boolean',
+        'bio'      => 'nullable|string|max:1000',
+        'location' => 'nullable|string|max:255',
+        'title'    => 'nullable|string|max:255',
+        'event_type_id' => 'nullable|exists:event_types,id',
+    ]);
+
+    // Update User Fields
+    $user->name      = $request->name;
+    $user->email     = $request->email;
+    $user->phone     = $request->phone ?? $user->phone;
+    $user->location  = $request->location ?? $user->location;
+    $user->title     = $request->title ?? $user->title;
+    $user->bio       = $request->bio ?? $user->bio;
+    $user->rate      = $request->rate ?? $user->rate;
+    $user->is_active = $request->has('is_active') ? 1 : 0;
+    $user->services  = $request->services ? json_encode($request->services) : json_encode([]);
+    // Persist event types only if the DB column exists (migration ran).
+    if (Schema::hasColumn('users', 'event_types')) {
+        $user->event_types = $request->event_types ?? [];
+    }
+
+    if ($request->password) {
+        $user->password = Hash::make($request->password);
+    }
+
+    if ($request->hasFile('avatar') && $request->file('avatar')->isValid()) {
+        if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+            Storage::disk('public')->delete($user->avatar);
+        }
+        $user->avatar = $request->file('avatar')->store('avatars/coordinators', 'public');
+    }
 
         $user->name=$request->name;
         $user->email=$request->email;
@@ -307,6 +335,33 @@ class CoordinatorController extends Controller
             $coordinator->profile_photo = 'profile_photos/'.$filename;
             $coordinator->save();
         }
+    return redirect()->route('coordinator.profile')->with('success', 'Profile updated successfully!');
+}
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            if (!Auth::check() || Auth::user()->role !== 'coordinator') {
+                abort(403, 'Unauthorized.');
+            }
+            if (!Auth::user()->is_active) {
+                Auth::logout();
+                return redirect()->route('login')->with('error', 'Your account is pending admin approval.');
+            }
+
+            // Ensure there is a coordinators table row for this coordinator user.
+            // This prevents 403s and allows bookings/events FK constraints to work.
+            /** @var \App\Models\User $user */
+            $user = Auth::user();
+            if (!$user->coordinator) {
+                Coordinator::create([
+                    'user_id' => $user->id,
+                    'coordinator_name' => $user->name,
+                    'expertise' => '',
+                    'phone_number' => '',
+                    'address' => '',
+                    'status' => 'approved',
+                ]);
+            }
 
         $user->save();
         return redirect()->route('coordinator.profile')->with('success','Profile updated successfully!');
