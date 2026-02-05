@@ -4,6 +4,7 @@
 
 <div class="p-6 space-y-10">
 
+    <!-- HEADER -->
     <div>
         <h1 class="text-3xl font-extrabold text-[#3E3F29] tracking-tight">
             Coordinators
@@ -13,6 +14,7 @@
         </p>
     </div>
 
+    <!-- SEARCH + FILTER -->
     <form method="GET" class="flex flex-col md:flex-row gap-3 relative">
 
         <input type="text"
@@ -25,31 +27,29 @@
                       focus:outline-none text-sm">
 
         <div class="flex gap-3 relative">
-            <details id="filterDropdown" class="group">
+            <details class="group">
                 <summary
                     class="flex items-center gap-2 px-6 py-3 rounded-lg
                            bg-[#3E3F29] text-white font-semibold text-sm
                            cursor-pointer hover:opacity-90 transition
                            list-none">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
-                         viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                              d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L15 12.414V19a1 1 0 01-.553.894l-4 2A1 1 0 019 21v-8.586L3.293 6.707A1 1 0 013 6V4z"/>
-                    </svg>
-                    <span id="filterLabel">{{ request('event_type') ? ucfirst(request('event_type')) : 'All Events' }}</span>
+                    <span>
+                        {{ request('event_type') ? ucfirst(request('event_type')) : 'All Events' }}
+                    </span>
                 </summary>
 
                 <div class="absolute right-0 mt-2 w-56
                             bg-white rounded-xl shadow-xl
                             border border-gray-100 z-20">
                     @foreach(['wedding','birthday','others'] as $type)
-                        <label class="flex items-center gap-3 px-4 py-3 text-sm hover:bg-[#F6F8F5] cursor-pointer {{ $loop->first ? 'rounded-t-xl' : ($loop->last ? 'rounded-b-xl' : '') }}">
-                            <input type="radio" name="event_type" value="{{ $type }}"
+                        <label class="flex items-center gap-3 px-4 py-3 text-sm hover:bg-[#F6F8F5] cursor-pointer">
+                            <input type="radio"
+                                   name="event_type"
+                                   value="{{ $type }}"
                                    class="hidden peer"
-                                   onchange="this.form.submit()" 
+                                   onchange="this.form.submit()"
                                    {{ request('event_type') == $type ? 'checked' : '' }}>
-                            <span class="w-4 h-4 rounded-full border border-gray-400
-                                         peer-checked:bg-[#3E3F29]"></span>
+                            <span class="w-4 h-4 rounded-full border border-gray-400 peer-checked:bg-[#3E3F29]"></span>
                             {{ ucfirst($type) }}
                         </label>
                     @endforeach
@@ -65,76 +65,91 @@
         </div>
     </form>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+    <!-- COORDINATORS GRID -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-10">
+
         @forelse($coordinators as $event => $items)
             @foreach($items as $coordinator)
-                {{-- Safety Check: Ensure coordinator is an object before rendering --}}
+
                 @if(is_object($coordinator))
-                <div class="group bg-white rounded-2xl p-5
-                            border border-[#A1BC98]/40
-                            shadow-sm
-                            hover:shadow-lg hover:-translate-y-1
-                            transition-all duration-300
-                            flex items-center gap-6">
+                <div class="group relative bg-white rounded-3xl p-6
+                            border border-[#A1BC98]/40 shadow-md
+                            hover:shadow-2xl hover:-translate-y-2
+                            transition-all duration-300">
 
-                    <div class="w-2 h-12 rounded-full bg-[#778873]"></div>
+                    <!-- glow -->
+                    <div class="absolute inset-0 rounded-3xl
+                                bg-gradient-to-br from-[#A1BC98]/20 to-[#778873]/20
+                                opacity-0 group-hover:opacity-100
+                                transition pointer-events-none"></div>
 
-                    <div class="w-16 h-16 rounded-lg
-                                bg-[#A1BC98]/80
-                                text-[#3E3F29]
-                                flex items-center justify-center
-                                font-bold text-lg
-                                group-hover:bg-[#778873]/80
-                                group-hover:text-white
-                                transition">
-                        {{-- FIXED: Safely get initials from User name OR coordinator_name --}}
-                        {{ strtoupper(substr($coordinator->user->name ?? $coordinator->coordinator_name ?? '??', 0, 2)) }}
-                    </div>
+<!-- TOP -->
+<div class="relative flex items-center gap-5">
 
-                    <div class="flex-1">
-                        <h3 class="font-semibold text-[#3E3F29] text-lg leading-tight">
-                            {{-- FIXED: Safely get Name from User relationship --}}
-                            {{ $coordinator->user->name ?? $coordinator->coordinator_name ?? 'Name Not Found' }}
-                        </h3>
-                        <p class="text-sm text-gray-500">
-                            {{-- FIXED: Safely get Event Type --}}
-                            {{ ucfirst($coordinator->events->first()->event_type ?? $coordinator->event_type ?? 'General') }} Coordinator
-                        </p>
-                        <p class="text-xs text-gray-400 mt-1">
-                            {{-- FIXED: Safely get Address --}}
-                            {{ $coordinator->address ?? $coordinator->user->location ?? 'Location TBD' }}
-                        </p>
-                    </div>
+    <!-- PROFILE IMAGE / FALLBACK INITIALS -->
+    <div class="w-16 h-16 rounded-2xl overflow-hidden
+                bg-gradient-to-br from-[#778873] to-[#3E3F29]
+                flex items-center justify-center
+                text-white font-extrabold text-xl
+                shadow-lg shrink-0">
 
-                    <a href="{{ route('coordinators.show', $coordinator->id) }}"
-                       class="inline-flex items-center gap-2
-                              px-5 py-2 rounded-full
-                              text-sm font-semibold
-                              bg-[#778873] text-white
-                              shadow-md
-                              hover:bg-[#3E3F29]
-                              hover:shadow-lg
-                              transition-all">
-                        View
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                  d="M9 5l7 7-7 7"/>
-                        </svg>
-                    </a>
-
-                </div>
-                @endif
-            @endforeach
-        @empty
-            <div class="col-span-3 flex flex-col items-center justify-center mt-10 text-gray-500">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 mb-4 text-[#A1BC98]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-4-4h-1M9 20H4v-2a4 4 0 014-4h1m8-4a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-                <p class="text-center text-lg">No coordinators found.</p>
-            </div>
-        @endforelse
+        @if(!empty($coordinator->profile_image))
+            <img src="{{ asset('storage/coordinators/' . $coordinator->profile_image) }}"
+                 alt="{{ $coordinator->user->name }}"
+                 class="w-full h-full object-cover">
+        @else
+            {{ strtoupper(substr($coordinator->user->name ?? '??', 0, 2)) }}
+        @endif
     </div>
 
+    <!-- INFO -->
+    <div class="flex-1 min-w-0">
+        <h3 class="font-bold text-[#3E3F29] text-lg truncate">
+            {{ $coordinator->user->name ?? 'Name Not Found' }}
+        </h3>
+
+        <p class="text-sm font-medium text-[#778873]">
+            {{ ucfirst($event) }} Coordinator
+        </p>
+
+        <!-- EMAIL -->
+        <div class="flex items-center gap-2 mt-1 text-xs text-gray-500">
+            <svg class="w-4 h-4 text-[#778873]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8
+                         M5 6h14a2 2 0 012 2v8a2 2 0 01-2 2H5
+                         a2 2 0 01-2-2V8a2 2 0 012-2z"/>
+            </svg>
+            <span class="truncate">
+                {{ $coordinator->user->email ?? 'email@notavailable.com' }}
+            </span>
+        </div>
+    </div>
+</div>
+
+
+                    <!-- DIVIDER -->
+                    <div class="my-5 h-px bg-gradient-to-r from-transparent via-[#A1BC98]/60 to-transparent"></div>
+
+                    <!-- ACTION -->
+                    <a href="{{ route('coordinators.show', ['event' => $event, 'id' => $coordinator->id]) }}"
+                       class="inline-flex items-center justify-center gap-2 w-full
+                              px-6 py-3 rounded-full text-sm font-semibold
+                              text-white bg-gradient-to-r from-[#778873] to-[#3E3F29]
+                              shadow-md hover:shadow-xl transition">
+                        View Profile →
+                    </a>
+                </div>
+                @endif
+
+            @endforeach
+        @empty
+            <div class="col-span-3 text-center text-gray-500 mt-16">
+                <p class="text-lg font-semibold">No coordinators found</p>
+            </div>
+        @endforelse
+
+    </div>
 </div>
 
 @endsection

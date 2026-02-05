@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -19,7 +18,22 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('role')->default('client');
-            $table->enum('status', ['active', 'inactive', 'banned']);
+            
+            // --- NEW PROFILE FIELDS (Added these) ---
+            $table->string('title')->nullable();        // Job Title
+            $table->string('phone')->nullable();        // Phone Number
+            $table->string('location')->nullable();     // City/Address
+            $table->text('bio')->nullable();            // Description
+            $table->decimal('rate', 10, 2)->nullable(); // Price/Rate
+            $table->boolean('is_active')->default(true); // Availability
+            
+            // --- JSON FIELDS for Checkboxes ---
+            $table->json('services')->nullable();       // Stores ["Full Planning", "Day-of"]
+            $table->json('event_types')->nullable();    // Stores ["Wedding", "Debut"]
+            $table->json('portfolio')->nullable();      // Stores image paths
+            $table->string('avatar')->nullable();       // Profile picture
+            
+            $table->enum('status', ['active', 'inactive', 'banned'])->default('active');
             $table->rememberToken();
             $table->timestamps();
         });
@@ -49,5 +63,4 @@ return new class extends Migration
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
     }
-    
 };

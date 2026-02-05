@@ -3,14 +3,13 @@
 @section('content')
 <div class="p-6 space-y-6">
 
-    <!-- PAGE HEADER (SCREEN ONLY) -->
     <div class="flex items-center justify-between no-print">
         <div>
             <h1 class="text-3xl font-extrabold text-[#3E3F29] tracking-tight">
                 Top 10 Coordinators
             </h1>
             <p class="text-sm text-gray-600 mt-1">
-                Performance rankings by completed bookings
+                Performance rankings by highest rating
             </p>
         </div>
 
@@ -32,7 +31,6 @@
         </div>
     </div>
 
-    <!-- ================= TABLE (PRINT AREA) ================= -->
     <div class="print-area bg-white rounded-2xl shadow-sm overflow-hidden">
 
         <table class="w-full text-sm text-left">
@@ -47,22 +45,23 @@
 
             <tbody class="divide-y divide-[#778873]/20">
 
-                @forelse($topCoordinators as $index => $coordinator)
+                @forelse($topCoordinators as $index => $item)
                 <tr class="hover:bg-[#A1BC98]/20 transition">
                     <td class="py-3 px-5 font-bold text-[#3E3F29]">
                         #{{ $index + 1 }}
                     </td>
 
                     <td class="py-3 px-5 font-medium text-[#3E3F29]">
-                        {{ $coordinator->coordinator->coordinator_name ?? '—' }}
+                        {{-- FIX: Accessed as an array key ['coordinator'] --}}
+                        {{ $item['coordinator']->coordinator_name ?? '—' }}
                     </td>
 
                     <td class="py-3 px-5 text-center font-bold text-[#3E3F29]">
-                        {{ $coordinator['bookings_count'] ?? 0 }}
+                        {{ $item['bookings_count'] ?? 0 }}
                     </td>
 
                     <td class="py-3 px-5 text-center font-semibold text-[#3E3F29]">
-                        {{ $coordinator['ratings_avg'] !== null ? number_format($coordinator['ratings_avg'], 1) : '0.0' }} ⭐
+                        {{ $item['ratings_avg'] !== null ? number_format($item['ratings_avg'], 1) : '0.0' }} ⭐
                     </td>
                 </tr>
                 @empty
@@ -80,7 +79,6 @@
 
 </div>
 
-<!-- ================= PRINT STYLES ================= -->
 <style>
 @media print {
 

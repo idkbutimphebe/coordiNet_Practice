@@ -2,123 +2,201 @@
 
 @section('content')
 
-<div class="max-w-5xl mx-auto space-y-12">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 mb-12">
 
-    <div class="flex flex-col md:flex-row items-end justify-between gap-6 border-b border-[#8A9A5B]/20 pb-8">
+{{-- Top Navigation / Header --}}
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
         <div>
-            <span class="text-xs uppercase tracking-[0.3em] text-[#8A9A5B] font-semibold">Administrative Portal</span>
-            <h1 class="text-5xl font-serif italic text-[#2D2E22] mt-2">
-                Client Profile
+            {{-- Title: "Client" is now a deep dark green, "Profile" is a distinct vibrant green --}}
+            <h1 class="text-3xl font-extrabold text-green-900">
+                Client <span class="text-green-600">Profile</span>
             </h1>
         </div>
-        
+
         <a href="{{ route('bookings') }}" 
-           class="flex items-center gap-3 px-8 py-3 rounded-full border border-[#2D2E22] text-[#2D2E22] font-medium text-sm hover:bg-[#2D2E22] hover:text-white transition-all duration-500 ease-in-out">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-            <span class="tracking-widest uppercase text-[10px]">Back to Archive</span>
+           class="group flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 font-semibold text-sm hover:border-[#A1BC98] hover:text-[#3E3F29] transition-all shadow-sm hover:shadow-md">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:-translate-x-1 transition-transform"><path d="m15 18-6-6 6-6"/></svg>
+            Back to Bookings
         </a>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
 
-        <!-- Client Card -->
-        <div class="lg:col-span-4 space-y-8">
-            <div class="relative bg-white p-10 rounded-[3rem] shadow-sm border border-[#8A9A5B]/10 overflow-hidden text-center">
+        {{-- LEFT COLUMN: Client Card --}}
+        <div class="lg:col-span-1 space-y-6">
+            
+            <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 relative overflow-hidden text-center group">
+                {{-- Decorative bg circle --}}
+                <div class="absolute top-0 left-0 w-full h-24 bg-[#F6F8F5]"></div>
                 
-                <div class="absolute top-0 right-0 w-32 h-32 bg-[#F9F8F4] rounded-full -mr-16 -mt-16"></div>
-
-                <!-- Client Avatar -->
-                <div class="mx-auto w-24 h-24 rounded-full bg-[#8A9A5B]/10 border border-[#8A9A5B]/20 text-[#8A9A5B] text-2xl font-serif flex items-center justify-center italic mb-6">
+                {{-- Avatar / Initials --}}
+                <div class="relative mx-auto w-24 h-24 rounded-full bg-[#3E3F29] text-white text-2xl font-serif flex items-center justify-center border-4 border-white shadow-lg mb-4 z-10">
                     {{ strtoupper(substr(optional($booking->client)->first_name ?? 'C', 0, 1) . substr(optional($booking->client)->last_name ?? '', 0, 1)) }}
                 </div>
 
-                <h2 class="text-3xl font-serif text-[#2D2E22]">
-                    {{ optional($booking->client)->first_name ?? 'Client' }} 
-                    <span class="block italic opacity-70 text-2xl">{{ optional($booking->client)->last_name ?? '' }}</span>
+                {{-- Name & Status --}}
+                <h2 class="text-xl font-bold text-[#3E3F29]">
+                    {{ optional($booking->client)->first_name ?? 'Client' }} {{ optional($booking->client)->last_name ?? '' }}
                 </h2>
-
-                <div class="mt-4 flex flex-col items-center gap-3">
-                    <span class="px-4 py-1 rounded-full bg-[#F9F8F4] text-[#8A9A5B] text-[10px] uppercase tracking-tighter font-bold border border-[#8A9A5B]/20">
-                        {{ optional($booking->client)->status ?? 'New Client' }}
+                
+                <div class="mt-3 flex justify-center">
+                    <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider
+                        {{ (optional($booking->client)->status == 'Active') ? 'bg-[#A1BC98]/20 text-[#5a6b54]' : 'bg-gray-100 text-gray-500' }}">
+                        {{ optional($booking->client)->status ?? 'Pending Review' }}
                     </span>
-                    <span class="text-xs italic text-gray-400">Status: {{ optional($booking->client)->status ?? 'Pending Review' }}</span>
                 </div>
 
-                <div class="mt-10 pt-8 border-t border-gray-50 grid grid-cols-2 gap-4">
-                    <div>
-                        <p class="text-[9px] uppercase tracking-widest text-gray-400 mb-1">Bookings</p>
-                        <p class="text-xl font-medium">{{ optional($booking->client)->bookings?->count() ?? 0 }}</p>
+                {{-- Contact Details List --}}
+                <div class="mt-8 space-y-4 text-left">
+                    <div class="flex items-center gap-4 p-3 rounded-xl bg-[#F9FAFB] border border-gray-100 group-hover:border-[#A1BC98]/30 transition-colors">
+                        <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#778873] shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                        </div>
+                        <div class="overflow-hidden">
+                            <p class="text-[10px] uppercase text-gray-400 font-bold tracking-wider">Email</p>
+                            <p class="text-sm font-medium text-[#3E3F29] truncate" title="{{ optional($booking->client)->email }}">
+                                {{ optional($booking->client)->email ?? '-' }}
+                            </p>
+                        </div>
                     </div>
-                    <div>
-                        <p class="text-[9px] uppercase tracking-widest text-gray-400 mb-1">Portfolio</p>
-                        <p class="text-xl font-medium">N/A</p>
+
+                    <div class="flex items-center gap-4 p-3 rounded-xl bg-[#F9FAFB] border border-gray-100 group-hover:border-[#A1BC98]/30 transition-colors">
+                        <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#778873] shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                        </div>
+                        <div>
+                            <p class="text-[10px] uppercase text-gray-400 font-bold tracking-wider">Phone</p>
+                            <p class="text-sm font-medium text-[#3E3F29]">
+                                {{-- Checks 'phone_number' first, then 'phone', then returns '-' --}}
+                                {{ $booking->client->phone_number ?? $booking->client->phone ?? '-' }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-6 border-t border-gray-100 flex justify-between items-center px-2">
+                    <div class="text-center">
+                        <span class="block text-lg font-bold text-[#3E3F29]">{{ optional($booking->client)->bookings?->count() ?? 0 }}</span>
+                        <span class="text-[10px] text-gray-400 uppercase tracking-wider">Bookings</span>
+                    </div>
+                    <div class="h-8 w-px bg-gray-200"></div>
+                    <div class="text-center">
+                        <span class="block text-lg font-bold text-[#3E3F29]">{{ $booking->created_at ? $booking->created_at->format('M Y') : '-' }}</span>
+                        <span class="text-[10px] text-gray-400 uppercase tracking-wider">Joined</span>
                     </div>
                 </div>
             </div>
+
         </div>
 
-        <!-- Event Info -->
-        <div class="lg:col-span-8 space-y-8">
+        {{-- RIGHT COLUMN: Event Info --}}
+        <div class="lg:col-span-2 space-y-6">
 
-            <!-- Event Card -->
-            <div class="bg-[#2D2E22] rounded-[3rem] p-10 text-white flex justify-between items-center shadow-2xl relative overflow-hidden">
-                <div class="relative z-10">
-                    <p class="uppercase text-[10px] tracking-[0.4em] text-[#8A9A5B] mb-4 font-bold">The Main Event</p>
-                    <h3 class="text-5xl font-serif">{{ $booking->event_date?->format('F d, Y') ?? 'TBD' }}</h3>
-                </div>
-                
-                <div class="relative z-10 text-right">
-                    @php
-                        $daysAway = $booking->event_date ? now()->diffInDays($booking->event_date) : '-';
-                    @endphp
-                    <div class="text-6xl font-serif italic text-[#8A9A5B]/40">{{ $daysAway }}</div>
-                    <div class="text-[10px] uppercase tracking-widest">Days Away</div>
-                </div>
-                
-                <div class="absolute inset-0 opacity-10 pointer-events-none uppercase text-[8rem] font-serif -rotate-12 translate-y-10">
-                    Date
+            {{-- Hero Event Card --}}
+            <div class="bg-[#3E3F29] rounded-2xl p-8 md:p-10 text-white relative overflow-hidden shadow-xl">
+                {{-- Decorative background blobs --}}
+                <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-[#778873] rounded-full blur-3xl opacity-40"></div>
+                <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-56 h-56 bg-[#A1BC98] rounded-full blur-3xl opacity-20"></div>
+
+                <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                    <div>
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#A1BC98] text-[#3E3F29] uppercase tracking-wider">
+                                Upcoming Event
+                            </span>
+                        </div>
+                        <h2 class="text-4xl md:text-5xl font-serif text-[#F6F8F5] leading-tight">
+                            {{ $booking->event_date?->format('F d, Y') ?? 'Date TBD' }}
+                        </h2>
+                        <p class="text-[#A1BC98] mt-2 text-sm font-medium tracking-wide">
+                            {{ $booking->event_date?->format('l') ?? '' }} • {{ $booking->event_time ?? 'Time TBD' }}
+                        </p>
+                    </div>
+
+                    <div class="text-left md:text-right">
+                        @php
+                            $daysAway = $booking->event_date ? (int)now()->diffInDays($booking->event_date, false) : null;
+                        @endphp
+                        
+                        @if($daysAway !== null)
+                            @if($daysAway > 0)
+                                <div class="text-5xl md:text-6xl font-bold text-[#A1BC98] tracking-tighter">{{ $daysAway }}</div>
+                                <div class="text-[10px] uppercase tracking-[0.2em] text-gray-400 mt-1">Days To Go</div>
+                            @elseif($daysAway == 0)
+                                <div class="text-4xl font-bold text-[#A1BC98]">TODAY</div>
+                                <div class="text-[10px] uppercase tracking-[0.2em] text-gray-400 mt-1">Event Day</div>
+                            @else
+                                <div class="text-4xl font-bold text-gray-500">DONE</div>
+                                <div class="text-[10px] uppercase tracking-[0.2em] text-gray-500 mt-1">Past Event</div>
+                            @endif
+                        @else
+                            <span class="text-2xl text-gray-400">--</span>
+                        @endif
+                    </div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {{-- Logistics Grid --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
-                <!-- Communication -->
-                <div class="bg-white p-8 rounded-[2.5rem] border border-[#8A9A5B]/10 hover:border-[#8A9A5B]/40 transition-colors duration-500">
-                    <h4 class="text-[11px] uppercase tracking-[0.3em] text-[#8A9A5B] font-bold mb-6 flex items-center gap-3">
-                        <span class="w-1 h-1 rounded-full bg-[#8A9A5B]"></span>
-                        Communication
-                    </h4>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-[9px] uppercase text-gray-400 tracking-wider mb-1">Email Address</label>
-                            <p class="text-sm font-medium border-b border-gray-50 pb-2">{{ optional($booking->client)->email ?? '-' }}</p>
+                {{-- Logistics Box --}}
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:border-[#A1BC98] transition-colors duration-300">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-10 h-10 rounded-xl bg-[#F6F8F5] text-[#3E3F29] flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
                         </div>
                         <div>
-                            <label class="block text-[9px] uppercase text-gray-400 tracking-wider mb-1">Phone Number</label>
-                            <p class="text-sm font-medium">{{ optional($booking->client)->phone ?? '-' }}</p>
+                            <h4 class="font-bold text-[#3E3F29]">Logistics</h4>
+                            <p class="text-xs text-gray-400">Venue & Type</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-[10px] uppercase text-gray-400 font-bold tracking-wider">Event Type</label>
+                            {{-- Check both event_type and category just in case --}}
+                            <p class="text-sm font-semibold text-[#3E3F29] mt-1">
+                                {{ $booking->event_type ?? $booking->category ?? 'Not Specified' }}
+                            </p>
+                        </div>
+                        <div class="h-px bg-gray-100 w-full"></div>
+                        <div>
+                            <label class="text-[10px] uppercase text-gray-400 font-bold tracking-wider">Location / Venue</label>
+                            <p class="text-sm font-semibold text-[#3E3F29] mt-1">{{ $booking->location ?? 'To Be Decided' }}</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Logistics -->
-                <div class="bg-white p-8 rounded-[2.5rem] border border-[#8A9A5B]/10 hover:border-[#8A9A5B]/40 transition-colors duration-500">
-                    <h4 class="text-[11px] uppercase tracking-[0.3em] text-[#8A9A5B] font-bold mb-6 flex items-center gap-3">
-                        <span class="w-1 h-1 rounded-full bg-[#8A9A5B]"></span>
-                        Logistics
-                    </h4>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-[9px] uppercase text-gray-400 tracking-wider mb-1">Event Category</label>
-                            <p class="text-sm font-medium italic border-b border-gray-50 pb-2">{{ $booking->category ?? '-' }}</p>
+                {{-- Package / Requirements Box --}}
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:border-[#A1BC98] transition-colors duration-300">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-10 h-10 rounded-xl bg-[#F6F8F5] text-[#3E3F29] flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                         </div>
                         <div>
-                            <label class="block text-[9px] uppercase text-gray-400 tracking-wider mb-1">Primary Location</label>
-                            <p class="text-sm font-medium">{{ $booking->location ?? '-' }}</p>
+                            <h4 class="font-bold text-[#3E3F29]">Details</h4>
+                            <p class="text-xs text-gray-400">Package & Notes</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-[10px] uppercase text-gray-400 font-bold tracking-wider">Service Type</label>
+                            <p class="text-sm font-semibold text-[#3E3F29] mt-1">{{ $booking->package ?? 'Standard Package' }}</p>
+                        </div>
+                         <div class="h-px bg-gray-100 w-full"></div>
+                        <div>
+                            <label class="text-[10px] uppercase text-gray-400 font-bold tracking-wider">Client Notes</label>
+                            {{-- Output raw notes --}}
+                            <p class="text-sm text-gray-500 mt-1 italic line-clamp-3">
+                                {{ $booking->notes ?? 'No notes found.' }}
+                            </p>
                         </div>
                     </div>
                 </div>
 
             </div>
+
         </div>
     </div>
 </div>

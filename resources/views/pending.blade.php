@@ -3,7 +3,6 @@
 @section('content')
 <div class="p-6 space-y-6">
 
-    <!-- HEADER -->
     <div>
         <h1 class="text-3xl font-extrabold text-[#3E3F29] tracking-tight">
             Pending Coordinators
@@ -13,8 +12,14 @@
         </p>
     </div>
 
-    <!-- SEARCH BAR -->
-    <form method="GET" class="flex items-center gap-3">
+    {{-- SUCCESS MESSAGE (Optional: Displays when you approve/decline) --}}
+    @if(session('success'))
+        <div class="bg-green-100 text-green-700 p-3 rounded-lg border border-green-300 text-sm">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    <form method="GET" action="{{ route('pending') }}" class="flex items-center gap-3">
         <div class="relative flex-1">
             <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[#3E3F29]/60">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -25,7 +30,7 @@
 
             <input
                 type="text"
-                name="search"
+                name="search" 
                 value="{{ request('search') }}"
                 placeholder="Search pending coordinators..."
                 class="w-full pl-10 pr-4 py-3 rounded-lg
@@ -47,19 +52,22 @@
         </button>
     </form>
 
-    <!-- CARDS GRID -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
 
         @forelse($pendingCoordinators as $coordinator)
         <div class="border p-4 rounded-lg bg-white shadow">
             <h2 class="font-semibold text-lg">{{ $coordinator->name }}</h2>
             <p class="text-sm text-gray-600">{{ $coordinator->email }}</p>
+            
             <div class="mt-4 flex gap-2">
+                {{-- Approve Form --}}
                 <form action="{{ route('approve', $coordinator->id) }}" method="POST">
                     @csrf
                     <button type="submit" class="btn btn-success">Approve</button>
                 </form>
-                <form action="{{ route('decline', $coordinator->id) }}" method="POST">
+                
+                {{-- Decline Form --}}
+                <form action="{{ route('decline', $coordinator->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to decline this request?');">
                     @csrf
                     <button type="submit" class="btn btn-danger">Decline</button>
                 </form>
@@ -76,8 +84,8 @@
 
     </div>
 
-    <!-- PAGINATION -->
     <div class="mt-6 py-4 flex justify-center">
+        {{-- We use Laravel's default pagination links here to make it functional --}}
         {{ $pendingCoordinators->links() }}
     </div>
 

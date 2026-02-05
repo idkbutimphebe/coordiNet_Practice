@@ -32,59 +32,35 @@ class CoordinatorController extends Controller
         return $id;
     }
 
-    // ---------------- Constructor / Middleware ----------------
-    public function __construct()
-    {
-        $this->middleware(function ($request, $next) {
-            $user = auth()->user();
-
-            if (!$user || $user->role !== 'coordinator') {
-                abort(403, 'Unauthorized.');
-            }
-
-            if (!$user->is_active) {
-                auth()->logout();
-                return redirect()->route('login')
-                    ->with('error', 'Your account is pending admin approval.');
-            }
-
-            // Ensure coordinator row exists
-            if (!$user->coordinator) {
-                Coordinator::create([
-                    'user_id' => $user->id,
-                    'coordinator_name' => $user->name,
-                    'expertise' => '',
-                    'phone_number' => '',
-                    'address' => '',
-                    'status' => 'approved',
-                ]);
-            }
-
-            return $next($request);
-        });
-    }
-
     // ---------------- DASHBOARD ----------------
     public function dashboard()
     {
+        $user = Auth::user();
+
+        // CHECK: If user is coordinator but has no profile row, create it now.
+        if ($user->role === 'coordinator' && !$user->coordinator) {
+             Coordinator::create([
+                'user_id' => $user->id,
+                'coordinator_name' => $user->name,
+                'expertise' => '',
+                'phone_number' => '',
+                'address' => '',
+                'status' => 'approved', 
+            ]);
+            $user->refresh(); // Reload user relationship
+        }
+
         $coordinatorId = $this->coordinatorIdOrNull();
 
+        // Safety check if creation failed or user is not a coordinator
         if (!$coordinatorId) {
-            // Empty dashboard for missing coordinator row
-            $pendingBookings = collect();
-            $stats = [
-                ['label'=>'Confirmed Bookings','value'=>0,'icon'=>'<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-5-4M9 20H4v-2a4 4 0 015-4m6-4a4 4 0 11-8 0 4 4 0 018 0z"/>','link'=>route('coordinator.bookings',['status'=>'confirmed'])],
-                ['label'=>'Pending Bookings','value'=>0,'icon'=>'<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>','link'=>route('coordinator.bookings',['status'=>'pending'])],
-                ['label'=>'Upcoming Events','value'=>0,'icon'=>'<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>','link'=>route('coordinator.schedule')],
-            ];
-
-            $statusChart = ['completed'=>0,'pending'=>0,'cancelled'=>0];
-            $activityLabels = [];
-            $activityData = [];
-            for ($i=6;$i>=0;$i--) { $date=now()->subDays($i); $activityLabels[]=$date->format('D'); $activityData[]=0; }
-
-            return view('coordinator.dashboard', compact('pendingBookings','stats','statusChart','activityLabels','activityData'))
-                ->with('error','Coordinator profile not found. Please complete coordinator registration or contact admin.');
+            return view('coordinator.dashboard', [
+                'pendingBookings' => collect(),
+                'stats' => [],
+                'statusChart' => [],
+                'activityLabels' => [],
+                'activityData' => []
+            ]);
         }
 
         $pendingBookings = Booking::where('coordinator_id',$coordinatorId)
@@ -173,34 +149,38 @@ class CoordinatorController extends Controller
 
     public function getScheduleEvents()
     {
-        $events=[]; $coordinatorId = Auth::id();
-        $bookings = Booking::with('client')->where('coordinator_id',$coordinatorId)->where('status','!=','cancelled')->get();
-        foreach($bookings as $b){
-            $events[]=[
-                'id'=>'booking-'.$b->id,
-                'title'=>'Client: '.($b->client->name??'Booking'),
-                'start'=>$b->booking_date,
-                'backgroundColor'=>'#3E3F29',
-                'borderColor'=>'#3E3F29',
-                'extendedProps'=>['location'=>$b->location??'TBD','status'=>ucfirst($b->status),'type'=>'Client Booking']
-            ];
-        }
+        $events=[]; 
+        $coorId = $this->coordinatorIdOrNull();
 
-        try {
-            $schedules = Schedule::where('coordinator_id',$coordinatorId)->get();
-            foreach($schedules as $s){
+        if($coorId) {
+            $bookings = Booking::with('client')->where('coordinator_id',$coorId)->where('status','!=','cancelled')->get();
+            foreach($bookings as $b){
                 $events[]=[
-                    'id'=>'schedule-'.$s->id,
-                    'title'=>$s->name,
-                    'start'=>$s->date.'T'.$s->start_time,
-                    'end'=>$s->date.'T'.$s->end_time,
-                    'backgroundColor'=>'#A1BC98',
-                    'borderColor'=>'#A1BC98',
-                    'extendedProps'=>['location'=>$s->location??'','type'=>'Personal Schedule']
+                    'id'=>'booking-'.$b->id,
+                    'title'=>'Client: '.($b->client->name??'Booking'),
+                    'start'=>$b->booking_date,
+                    'backgroundColor'=>'#3E3F29',
+                    'borderColor'=>'#3E3F29',
+                    'extendedProps'=>['location'=>$b->location??'TBD','status'=>ucfirst($b->status),'type'=>'Client Booking']
                 ];
             }
-        } catch (\Exception $e){
-            Log::error('Schedule table error: '.$e->getMessage());
+            
+            try {
+                $schedules = Schedule::where('coordinator_id',$coorId)->get();
+                foreach($schedules as $s){
+                    $events[]=[
+                        'id'=>'schedule-'.$s->id,
+                        'title'=>$s->name,
+                        'start'=>$s->date.'T'.$s->start_time,
+                        'end'=>$s->date.'T'.$s->end_time,
+                        'backgroundColor'=>'#A1BC98',
+                        'borderColor'=>'#A1BC98',
+                        'extendedProps'=>['location'=>$s->location??'','type'=>'Personal Schedule']
+                    ];
+                }
+            } catch (\Exception $e){
+                Log::error('Schedule table error: '.$e->getMessage());
+            }
         }
 
         return response()->json($events);
@@ -216,9 +196,11 @@ class CoordinatorController extends Controller
             'location'=>'nullable|string|max:255',
         ]);
 
+        $coorId = $this->requireCoordinatorId();
+
         try {
             $event = Schedule::create([
-                'coordinator_id'=>Auth::id(),
+                'coordinator_id'=>$coorId, 
                 'name'=>$request->name,
                 'date'=>$request->date,
                 'start_time'=>Carbon::parse($request->start_time)->format('H:i:s'),
@@ -236,7 +218,9 @@ class CoordinatorController extends Controller
     // ---------------- REVIEWS ----------------
     public function reviews()
     {
-        $coordinatorId = Auth::id();
+        $coordinatorId = $this->coordinatorIdOrNull();
+        if(!$coordinatorId) return redirect()->back()->with('error', 'Profile not found');
+
         $reviews = Reviews::where('coordinator_id',$coordinatorId)->with('client')->latest()->get();
         $formattedAvg = number_format((float)$reviews->avg('rating'),1);
         $totalReviews = $reviews->count();
@@ -275,7 +259,7 @@ class CoordinatorController extends Controller
         $user->title=$request->title??$user->title;
         $user->bio=$request->bio??$user->bio;
         $user->rate=$request->rate??$user->rate;
-        $user->is_active = $request->has('is_active')?1:0;
+        
         $user->services = $request->services?json_encode($request->services):json_encode([]);
         if(Schema::hasColumn('users','event_types')) $user->event_types = $request->event_types??[];
 
@@ -310,5 +294,72 @@ class CoordinatorController extends Controller
 
         $user->save();
         return redirect()->route('coordinator.profile')->with('success','Profile updated successfully!');
+    }
+
+    /**
+     * Show all coordinators grouped by event type (for clients/guests)
+     */
+    public function index()
+    {
+        $allCoordinators = Coordinator::with(['user', 'events'])
+            ->whereHas('user', function($query) {
+                $query->where('is_active', 1);
+            })
+            ->get();
+
+        $coordinators = $allCoordinators->groupBy(function($coordinator) {
+            $firstEvent = $coordinator->events->first();
+            return $firstEvent ? $firstEvent->event_type : 'others';
+        });
+
+        return view('coordinators.index', compact('coordinators'));
+    }
+
+    /**
+     * Show single coordinator profile
+     */
+    public function show($id) 
+    {
+        $eventType = request('event'); 
+
+        $coordinator = Coordinator::with(['user', 'events', 'bookings'])
+            ->findOrFail($id);
+
+        if (!$coordinator->user || !$coordinator->user->is_active) {
+            abort(403, 'This coordinator is not available.');
+        }
+
+        return view('coordinators.show', compact('coordinator', 'eventType'));
+    }
+
+    /**
+     * Update Coordinator (Admin function)
+     */
+    public function update(Request $request, $id)
+    {
+        // Security Check: Only Admins can do this
+        if (strtolower(trim(Auth::user()->role)) !== 'admin') {
+            abort(403, 'Unauthorized. Only admins can update coordinators here.');
+        }
+
+        $user = User::findOrFail($id);
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email,' . $id,
+        ]);
+
+        $user->update([
+            'name' => $request->name,
+            'email' => $request->email,
+        ]);
+
+        if ($user->coordinator) {
+            $user->coordinator->update([
+                 'status' => $request->status ?? $user->coordinator->status,
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Coordinator updated successfully.');
     }
 }

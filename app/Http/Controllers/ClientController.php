@@ -239,14 +239,70 @@ public function dashboard()
     }
 
     // ================= COORDINATORS ==================
-    public function showCoordinator($id)
+public function viewCoordinator($id)
     {
-        $coordinator = Coordinator::with(['user', 'events'])->findOrFail($id);
-        $events = $coordinator->events;
+        // 1. Get the User (Coordinator)
+        $coordinatorUser = User::where('role', 'coordinator')
+            ->where('id', $id)
+            ->where('is_active', 1)
+            ->with('coordinator') // Load the profile relationship
+            ->firstOrFail();
 
-        return view('client.coordinators', compact('coordinator', 'events'));
+        // 2. Get the Coordinator Profile Model
+        $coordinator = $coordinatorUser->coordinator;
+
+        // Safety check: Ensure profile exists
+        if (!$coordinator) {
+            return back()->with('error', 'This coordinator has not set up their profile yet.');
+        }
+
+        // 3. Prepare Services Array (Decode JSON)
+        $servicesRaw = $coordinator->services ?? [];
+        $servicesArray = is_string($servicesRaw) 
+            ? json_decode($servicesRaw, true) 
+            : ($servicesRaw ?? []);
+            
+        // Ensure it's an array to prevent errors
+        if (!is_array($servicesArray)) {
+            $servicesArray = [];
+        }
+
+        // 4. Calculate Ratings
+        $averageRating = Reviews::where('coordinator_id', $coordinator->id)->avg('rating') ?? 0;
+        $averageRating = number_format($averageRating, 1);
+        $totalReviews = Reviews::where('coordinator_id', $coordinator->id)->count();
+
+        // 5. Get Reviews List
+        $reviews = Reviews::where('coordinator_id', $coordinator->id)
+            ->with('client.user')
+            ->latest()
+            ->get();
+
+        // 6. Check if current client has a completed booking (for showing rating stars)
+        $hasCompletedBooking = false;
+        if (Auth::check()) {
+            $hasCompletedBooking = Booking::where('client_id', Auth::id())
+                ->where('coordinator_id', $coordinator->id)
+                ->where(function($query) {
+                    $query->where('status', 'completed')
+                          ->orWhereDate('event_date', '<', now());
+                })
+                ->exists();
+        }
+
+        // 7. Pass ALL variables to the view
+        return view('client.coordinator-view', compact(
+            'coordinatorUser',      // The User model (name, email, avatar)
+            'coordinator',          // The Profile model (bio, rate, portfolio)
+            'servicesArray',        // The decoded services list
+            'averageRating',        // Formatted rating (e.g., "4.5")
+            'totalReviews',         // Count of reviews
+            'reviews',              // List of review objects
+            'hasCompletedBooking'   // Boolean for review permission
+        ));
     }
 
+    // THIS FUNCTION WAS MISSING IN YOUR PREVIOUS CODE
     public function coordinators()
     {
         $query = User::where('role', 'coordinator')->where('is_active', 1);

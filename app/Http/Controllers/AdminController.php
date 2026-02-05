@@ -8,17 +8,22 @@ use App\Models\User;
 use App\Models\Coordinator;
 use App\Models\Client;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class AdminController extends Controller
 {
-    /**
-     * Show the admin dashboard with stats and monthly booking availability.
-     */
+    // ----------------------------------------------------------------
+    // DASHBOARD
+    // ----------------------------------------------------------------
     public function dashboard()
     {
         $totalCoordinators = Coordinator::count();
         $totalBookings     = Booking::count();
-        $pendingRequests   = Coordinator::where('status', 'pending')->count();
+        
+        // Count users who are coordinators but NOT active yet (Pending)
+        $pendingRequests   = User::where('role', 'coordinator')
+                                 ->where('is_active', 0)
+                                 ->count();
 
         $stats = [
             [
@@ -45,13 +50,13 @@ class AdminController extends Controller
         $availability = [];
         $now = Carbon::now();
         $monthlyBookings = Booking::whereMonth('event_date', $now->month)
-                          ->whereYear('event_date', $now->year)
-                          ->get();
+                                  ->whereYear('event_date', $now->year)
+                                  ->get();
 
         for ($day = 1; $day <= $now->daysInMonth; $day++) {
             $isBooked = $monthlyBookings->contains(function ($booking) use ($day) {
                 return Carbon::parse($booking->event_date)->day == $day;
-        });
+            });
 
             $availability[$day] = $isBooked ? 'Booked' : 'Available';
         }
@@ -59,68 +64,109 @@ class AdminController extends Controller
         return view('dashboard', compact('stats', 'availability'));
     }
 
-    /**
-     * Show all pending coordinators.
-     */
-    // public function pending()
-    // {
-    //     $pendingCoordinators = Coordinator::where('status', 'pending')
-    //                                       ->orderBy('coordinator_name')
-    //                                       ->paginate(10);
-
-    //     return view('pending', compact('pendingCoordinators'));
-    // }
-public function approveCoordinator($id)
-{
-    $coordinator = User::findOrFail($id);
-    $coordinator->is_active = 1;
-    $coordinator->save();
-
-    return redirect()->back()->with('success', 'Coordinator approved successfully.');
-}
-
-public function declineCoordinator($id)
-{
-    $coordinator = User::findOrFail($id);
-    $coordinator->delete(); // or set a flag if you want to keep record
-
-    return redirect()->back()->with('success', 'Coordinator declined.');
-}
-
+    // ----------------------------------------------------------------
+    // COORDINATOR APPROVAL LOGIC
+    // ----------------------------------------------------------------
 
     /**
-     * Show all coordinators report.
+     * Show pending coordinator requests.
+     * Looks for Users with role='coordinator' and is_active=0
      */
-public function allCoordinators()
-{
-    // Fetch all coordinators and count completed bookings directly from bookings table
-    $coordinators = Coordinator::withCount([
-        'bookings as bookings_count' => function ($query) {
-            $query->where('status', 'completed');
+// Display the pending list
+public function pending(Request $request)
+    {
+        // Get users who are coordinators but NOT active yet
+        $query = User::where('role', 'coordinator')->where('is_active', 0);
+
+        // Search functionality
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%$search%")
+                  ->orWhere('email', 'like', "%$search%");
+            });
         }
-    ])->orderBy('coordinator_name')->get();
 
-    return view('reports.coordinators', compact('coordinators'));
-}
+        // Fetch results (9 per page)
+        $pendingCoordinators = $query->orderBy('created_at', 'desc')->paginate(9);
+
+        // Append search query to pagination links
+        $pendingCoordinators->appends($request->all());
+
+        // FIXED: Changed 'admin.pending' to 'pending'
+        // This assumes your file is saved as: resources/views/pending.blade.php
+        return view('pending', compact('pendingCoordinators'));
+    }
+
+    // Approve logic
+    public function approveCoordinator($id)
+    {
+        $user = User::findOrFail($id);
+        
+        // 1. Activate the User login
+        $user->is_active = 1;
+        $user->save();
+
+        // 2. Create the Coordinator Profile row if it doesn't exist
+        if (!$user->coordinator) {
+            Coordinator::create([
+                'user_id' => $user->id,
+                'coordinator_name' => $user->name,
+                'status' => 'approved',
+                'expertise' => 'General', // Default placeholder
+                'phone_number' => '',
+                'address' => '',
+            ]);
+        } else {
+            $user->coordinator->update(['status' => 'approved']);
+        }
+
+        return redirect()->back()->with('success', 'Coordinator approved successfully.');
+    }
+
+    // Decline logic
+    public function declineCoordinator($id)
+    {
+        $user = User::findOrFail($id);
+        
+        // Delete the user account
+        $user->delete(); 
+
+        return redirect()->back()->with('success', 'Coordinator request declined.');
+    }
 
 
-    /**
-     * Top 10 coordinators report.
-     */
-    public function topCoordinators()
+    // ----------------------------------------------------------------
+    // REPORTS & LISTS
+    // ----------------------------------------------------------------
+    public function allCoordinators()
+    {
+        $coordinators = Coordinator::withCount([
+            'bookings as bookings_count' => function ($query) {
+                $query->where('status', 'completed');
+            }
+        ])->orderBy('coordinator_name')->get();
+
+        return view('reports.coordinators', compact('coordinators'));
+    }
+
+public function topCoordinators()
     {
         $topCoordinators = Coordinator::with('events.bookings')
             ->get()
             ->map(function ($coordinator) {
+                // 1. Calculate Completed Bookings
                 $completedBookings = $coordinator->events->sum(function ($event) {
                     return $event->bookings->where('status', 'completed')->count();
                 });
 
+                // 2. Calculate Average Rating
+                // Gather all ratings from all bookings across all events
                 $ratings = $coordinator->events->flatMap(function ($event) {
-                    return $event->bookings->pluck('rating')->filter();
+                    return $event->bookings->pluck('rating')->filter(); // Removes null/empty ratings
                 });
 
-                $averageRating = $ratings->count() ? round($ratings->avg(), 1) : null;
+                $averageRating = $ratings->isNotEmpty() ? round($ratings->avg(), 1) : 0;
 
                 return [
                     'coordinator' => $coordinator,
@@ -128,39 +174,39 @@ public function allCoordinators()
                     'ratings_avg' => $averageRating,
                 ];
             })
-            ->sortByDesc('bookings_count')
-            ->take(10);
+            // === FIX IS HERE ===
+            // Sort by Rating first (Highest to Lowest)
+            // If ratings are equal, those with more bookings appear first
+            ->sortBy([
+                ['ratings_avg', 'desc'],
+                ['bookings_count', 'desc'],
+            ])
+            ->take(10); // Take top 10
 
         return view('reports.topcoordinators', compact('topCoordinators'));
     }
-
-    /**
-     * Clients report.
-     */
-    public function clientReport()
+public function clientReport()
     {
-        $clients = Client::with(['event.coordinator'])
-                         ->orderBy('name')
-                         ->paginate(10);
+        // We fetch Bookings because they contain the Client, Event, and Coordinator data.
+        // We eagerly load 'client', 'event', and 'coordinator' to avoid missing data.
+        $bookings = Booking::with(['client', 'event', 'coordinator'])
+                           ->latest() // Sorts by newest booking first
+                           ->paginate(10);
 
-        return view('reports.clients', compact('clients'));
+        // We pass 'bookings' to the view instead of 'clients'
+        return view('reports.clients', compact('bookings'));
     }
 
-    /**
-     * Bookings report.
-     */
-    public function bookingReport()
+public function bookingReport()
     {
+        // FIXED: Changed 'booking_date' to 'event_date'
+        // If 'event_date' also fails, try using latest() to sort by creation time
         $bookings = Booking::with(['client', 'event.coordinator'])
-                           ->orderBy('booking_date', 'desc')
+                           ->orderBy('event_date', 'desc') 
                            ->paginate(10);
 
         return view('reports.bookings', compact('bookings'));
     }
-
-    /**
-     * Income report (total payments per coordinator).
-     */
     public function incomeReport()
     {
         $coordinators = Coordinator::with(['events.bookings'])
@@ -179,9 +225,6 @@ public function allCoordinators()
         return view('reports.income', compact('coordinators'));
     }
 
-    /**
-     * Ratings report.
-     */
     public function ratingReport()
     {
         $ratings = Booking::with(['client', 'event', 'coordinator'])
@@ -191,45 +234,30 @@ public function allCoordinators()
         return view('reports.ratings', compact('ratings'));
     }
 
-    /**
-     * Bookings list for admin index page (dynamic with search).
-     */
-public function index(Request $request)
-{
-    $query = Booking::with(['client', 'event.coordinator']);
+    public function index(Request $request)
+    {
+        $query = Booking::with(['client', 'event.coordinator']);
 
-    if ($request->filled('search')) {
-        $search = $request->search;
-        $query->whereHas('client', fn($q) => $q->where('name', 'like', "%$search%"))
-              ->orWhereHas('event', fn($q) => $q->where('name', 'like', "%$search%"));
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('client', fn($q) => $q->where('name', 'like', "%$search%"))
+                  ->orWhereHas('event', fn($q) => $q->where('name', 'like', "%$search%"));
+        }
+
+        $bookings = $query->orderBy('event_date', 'desc')->paginate(10);
+
+        return view('bookings.index', compact('bookings'));
     }
 
-    $bookings = $query->orderBy('event_date', 'desc') // <-- fixed
-                      ->paginate(10);
+    public function show($id)
+    {
+        $booking = Booking::with(['client', 'event'])->findOrFail($id);
+        return view('bookings.show', compact('booking'));
+    }
 
-    return view('bookings.index', compact('bookings'));
+    public function coordinators()
+    {
+        $coordinators = Coordinator::all(); 
+        return view('admin.coordinators.index', compact('coordinators'));
+    }
 }
-
-public function show($id)
-{
-    // Load the booking with client and event info
-    $booking = Booking::with(['client', 'event'])->findOrFail($id);
-
-    return view('bookings.show', compact('booking'));
-}
-
-public function pending()
-{
-    $pendingCoordinators = \App\Models\User::where('role', 'coordinator')
-        ->where('is_active', 0)
-        ->paginate(10); // <- pagination added
-
-    return view('pending', compact('pendingCoordinators'));
-}
-
-
-
-
-
-}
-
