@@ -73,8 +73,7 @@ class AdminController extends Controller
      * Show pending coordinator requests.
      * Looks for Users with role='coordinator' and is_active=0
      */
-// Display the pending list
-public function pending(Request $request)
+    public function pending(Request $request)
     {
         // Get users who are coordinators but NOT active yet
         $query = User::where('role', 'coordinator')->where('is_active', 0);
@@ -94,8 +93,6 @@ public function pending(Request $request)
         // Append search query to pagination links
         $pendingCoordinators->appends($request->all());
 
-        // FIXED: Changed 'admin.pending' to 'pending'
-        // This assumes your file is saved as: resources/views/pending.blade.php
         return view('pending', compact('pendingCoordinators'));
     }
 
@@ -138,23 +135,45 @@ public function pending(Request $request)
 
 
     // ----------------------------------------------------------------
-    // REPORTS & LISTS
+    // REPORTS & LISTS WITH FILTERS
     // ----------------------------------------------------------------
-    public function allCoordinators()
+    
+    public function allCoordinators(Request $request)
     {
-        $coordinators = Coordinator::withCount([
+        $query = Coordinator::withCount([
             'bookings as bookings_count' => function ($query) {
                 $query->where('status', 'completed');
             }
-        ])->orderBy('coordinator_name')->get();
+        ]);
+
+        // Search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('coordinator_name', 'like', "%$search%")
+                  ->orWhere('phone_number', 'like', "%$search%")
+                  ->orWhereHas('user', function($u) use ($search) {
+                      $u->where('email', 'like', "%$search%");
+                  });
+            });
+        }
+
+        $coordinators = $query->orderBy('coordinator_name')->get();
 
         return view('reports.coordinators', compact('coordinators'));
     }
 
-public function topCoordinators()
+    public function topCoordinators(Request $request)
     {
-        $topCoordinators = Coordinator::with('events.bookings')
-            ->get()
+        $query = Coordinator::with('events.bookings');
+
+        // Search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where('coordinator_name', 'like', "%$search%");
+        }
+
+        $topCoordinators = $query->get()
             ->map(function ($coordinator) {
                 // 1. Calculate Completed Bookings
                 $completedBookings = $coordinator->events->sum(function ($event) {
@@ -162,9 +181,8 @@ public function topCoordinators()
                 });
 
                 // 2. Calculate Average Rating
-                // Gather all ratings from all bookings across all events
                 $ratings = $coordinator->events->flatMap(function ($event) {
-                    return $event->bookings->pluck('rating')->filter(); // Removes null/empty ratings
+                    return $event->bookings->pluck('rating')->filter();
                 });
 
                 $averageRating = $ratings->isNotEmpty() ? round($ratings->avg(), 1) : 0;
@@ -175,39 +193,71 @@ public function topCoordinators()
                     'ratings_avg' => $averageRating,
                 ];
             })
-            // === FIX IS HERE ===
-            // Sort by Rating first (Highest to Lowest)
-            // If ratings are equal, those with more bookings appear first
             ->sortBy([
                 ['ratings_avg', 'desc'],
                 ['bookings_count', 'desc'],
             ])
-            ->take(10); // Take top 10
+            ->take(10);
 
         return view('reports.topcoordinators', compact('topCoordinators'));
     }
-public function clientReport()
-    {
-        // We fetch Bookings because they contain the Client, Event, and Coordinator data.
-        // We eagerly load 'client', 'event', and 'coordinator' to avoid missing data.
-        $bookings = Booking::with(['client', 'event', 'coordinator'])
-                           ->latest() // Sorts by newest booking first
-                           ->paginate(10);
 
-        // We pass 'bookings' to the view instead of 'clients'
+    public function clientReport(Request $request)
+    {
+        $query = Booking::with(['client', 'event', 'coordinator']);
+
+        // Search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->whereHas('client', fn($c) => $c->where('name', 'like', "%$search%"))
+                  ->orWhereHas('event', fn($e) => $e->where('event_name', 'like', "%$search%"))
+                  ->orWhereHas('coordinator', fn($co) => $co->where('coordinator_name', 'like', "%$search%"))
+                  ->orWhere('event_name', 'like', "%$search%"); // Also search in bookings.event_name column
+            });
+        }
+
+        // Date range filter
+        if ($request->filled('date_from')) {
+            $query->whereDate('event_date', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('event_date', '<=', $request->date_to);
+        }
+
+        $bookings = $query->latest()->paginate(10);
+
         return view('reports.clients', compact('bookings'));
     }
 
-public function bookingReport()
+    public function bookingReport(Request $request)
     {
-        // FIXED: Changed 'booking_date' to 'event_date'
-        // If 'event_date' also fails, try using latest() to sort by creation time
-        $bookings = Booking::with(['client', 'event.coordinator'])
-                           ->orderBy('event_date', 'desc') 
-                           ->paginate(10);
+        $query = Booking::with(['client', 'event.coordinator']);
+
+        // Search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->whereHas('client', fn($c) => $c->where('name', 'like', "%$search%"))
+                  ->orWhereHas('event', fn($e) => $e->where('event_name', 'like', "%$search%"))
+                  ->orWhereHas('event.coordinator', fn($co) => $co->where('coordinator_name', 'like', "%$search%"))
+                  ->orWhere('event_name', 'like', "%$search%"); // Also search in bookings.event_name column
+            });
+        }
+
+        // Date range filter
+        if ($request->filled('date_from')) {
+            $query->whereDate('event_date', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('event_date', '<=', $request->date_to);
+        }
+
+        $bookings = $query->orderBy('event_date', 'desc')->paginate(10);
 
         return view('reports.bookings', compact('bookings'));
     }
+
     public function incomeReport()
     {
         $coordinators = Coordinator::with(['events.bookings'])
@@ -226,11 +276,29 @@ public function bookingReport()
         return view('reports.income', compact('coordinators'));
     }
 
-    public function ratingReport()
+    public function ratingReport(Request $request)
     {
-        $ratings = Booking::with(['client', 'event', 'coordinator'])
-            ->latest()
-            ->get();
+        $query = Booking::with(['client', 'event', 'coordinator']);
+
+        // Search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->whereHas('client', fn($c) => $c->where('name', 'like', "%$search%"))
+                  ->orWhereHas('event', fn($e) => $e->where('event_name', 'like', "%$search%"))
+                  ->orWhereHas('coordinator', fn($co) => $co->where('coordinator_name', 'like', "%$search%"));
+            });
+        }
+
+        // Date range filter
+        if ($request->filled('date_from')) {
+            $query->whereDate('event_date', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('event_date', '<=', $request->date_to);
+        }
+
+        $ratings = $query->latest()->get();
 
         return view('reports.ratings', compact('ratings'));
     }
@@ -257,48 +325,45 @@ public function bookingReport()
     }
 
     public function coordinators(Request $request)
-{
-    // Start the query and eager load relationships (user, events) to prevent N+1 issues
-    $query = Coordinator::with(['user', 'events']);
+    {
+        // Start the query and eager load relationships (user, events) to prevent N+1 issues
+        $query = Coordinator::with(['user', 'events']);
 
-    // 1. Search Logic (Name or Address)
-    if ($request->filled('search')) {
-        $search = $request->search;
-        $query->where(function ($q) use ($search) {
-            $q->where('address', 'like', "%{$search}%")
-              ->orWhere('coordinator_name', 'like', "%{$search}%")
-              ->orWhereHas('user', function ($u) use ($search) {
-                  $u->where('name', 'like', "%{$search}%")
-                    ->orWhere('location', 'like', "%{$search}%");
-              });
+        // 1. Search Logic (Name or Address)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('address', 'like', "%{$search}%")
+                  ->orWhere('coordinator_name', 'like', "%{$search}%")
+                  ->orWhereHas('user', function ($u) use ($search) {
+                      $u->where('name', 'like', "%{$search}%")
+                        ->orWhere('location', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // 2. Filter Logic (Event Type)
+        if ($request->filled('event_type')) {
+            $type = $request->event_type;
+            $query->where(function ($q) use ($type) {
+                $q->whereHas('events', function ($e) use ($type) {
+                    $e->where('event_type', 'like', "%{$type}%");
+                })
+                ->orWhere('expertise', 'like', "%{$type}%");
+            });
+        }
+
+        // Get results
+        $rawCoordinators = $query->get();
+
+        // 3. Grouping Logic
+        $coordinators = $rawCoordinators->groupBy(function ($item) {
+            return $item->events->first()->event_type 
+                ?? $item->event_type 
+                ?? $item->expertise 
+                ?? 'General';
         });
+
+        return view('admin.coordinators.index', compact('coordinators'));
     }
-
-    // 2. Filter Logic (Event Type)
-    if ($request->filled('event_type')) {
-        $type = $request->event_type;
-        // Filter coordinators who have an event of this type
-        // OR whose expertise string matches the type
-        $query->where(function ($q) use ($type) {
-            $q->whereHas('events', function ($e) use ($type) {
-                $e->where('event_type', 'like', "%{$type}%");
-            })
-            ->orWhere('expertise', 'like', "%{$type}%");
-        });
-    }
-
-    // Get results
-    $rawCoordinators = $query->get();
-
-    // 3. Grouping Logic (Crucial for your View)
-    // We group the collection by event_type to match your @foreach($coordinators as $event => $items)
-    $coordinators = $rawCoordinators->groupBy(function ($item) {
-        return $item->events->first()->event_type 
-            ?? $item->event_type 
-            ?? $item->expertise 
-            ?? 'General';
-    });
-
-    return view('admin.coordinators.index', compact('coordinators'));
-}
 }

@@ -9,13 +9,10 @@
 
 <body class="bg-[#A1BC98] text-gray-900">
 
-<!-- APP WRAPPER -->
 <div class="flex min-h-screen w-full">
 
-    <!-- SIDEBAR -->
     <aside class="w-64 bg-[#778873] text-white flex-shrink-0">
 
-<!-- ADMIN LABEL -->
 <div class="px-4 py-5 border-b border-white/20 flex justify-center">
     <h2 class="text-lg font-semibold tracking-wide">
         Coordinator
@@ -23,7 +20,6 @@
 </div>
 
         <nav class="p-4 space-y-2">
-<!-- Dashboard -->
 <a href="{{ route('coordinator.dashboard') }}"
    class="flex items-center gap-3 px-4 py-2 rounded transition
    {{ request()->routeIs('coordinator.dashboard') ? 'bg-white/20 font-semibold' : 'hover:bg-white/20' }}">
@@ -34,7 +30,6 @@
     <span>Dashboard</span>
 </a>
 
-<!-- Bookings -->
 <a href="{{ route('coordinator.bookings') }}"
    class="flex items-center gap-3 px-4 py-2 rounded transition
    {{ request()->routeIs('coordinator.bookings') ? 'bg-white/20 font-semibold' : 'hover:bg-white/20' }}">
@@ -47,7 +42,6 @@
     <span>Bookings</span>
 </a>
 
-<!-- Schedule -->
 <a href="{{ route('coordinator.schedule') }}"
    class="flex items-center gap-3 px-4 py-2 rounded transition
    {{ request()->routeIs('coordinator.schedule') ? 'bg-white/20 font-semibold' : 'hover:bg-white/20' }}">
@@ -58,7 +52,6 @@
     <span>Schedule</span>
 </a>
 
-<!-- Ratings -->
 <a href="{{ route('coordinator.ratings') }}"
    class="flex items-center gap-3 px-4 py-2 rounded transition
    {{ request()->routeIs('coordinator.ratings') ? 'bg-white/20 font-semibold' : 'hover:bg-white/20' }}">
@@ -74,7 +67,6 @@
     <span>Ratings & Feedback</span>
 </a>
 
-<!-- Income -->
 <a href="{{ route('coordinator.income') }}"
    class="flex items-center gap-3 px-4 py-2 rounded transition
    {{ request()->routeIs('coordinator.income') ? 'bg-white/20 font-semibold' : 'hover:bg-white/20' }}">
@@ -85,19 +77,16 @@
     <span>Income / Payments</span>
 </a>
 
-<!-- Subscription -->
-<a href="{{ route('coordinator.subscription') }}"
+<a href="{{ route('coordinator.reports') }}"
    class="flex items-center gap-3 px-4 py-2 rounded transition
-   {{ request()->routeIs('coordinator.subscription') ? 'bg-white/20 font-semibold' : 'hover:bg-white/20' }}">
+   {{ request()->routeIs('coordinator.reports') ? 'bg-white/20 font-semibold' : 'hover:bg-white/20' }}">
     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <rect x="2" y="5" width="20" height="14" rx="2" ry="2" stroke-width="2"/>
-        <line x1="2" y1="10" x2="22" y2="10" stroke-width="2"/>
-        <line x1="6" y1="15" x2="10" y2="15" stroke-width="2"/>
+        <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
+              d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
     </svg>
-    <span>Subscription</span>
+    <span>Reports</span>
 </a>
 
-<!-- Profile -->
 <a href="{{ route('coordinator.profile') }}"
    class="flex items-center gap-3 px-4 py-2 rounded transition
    {{ request()->routeIs('coordinator.profile') ? 'bg-white/20 font-semibold' : 'hover:bg-white/20' }}">
@@ -109,8 +98,7 @@
     <span>My Profile</span>
 </a>
 
-       
-            <!-- Logout -->
+        
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button
@@ -129,8 +117,7 @@
 
         </nav>
     </aside>
-<!-- MAIN CONTENT -->
-    <main class="flex-1 min-w-0 bg-[#A1BC98] p-8 overflow-x-auto">
+<main class="flex-1 min-w-0 bg-[#A1BC98] p-8 overflow-x-auto">
         @yield('content')
     </main>
 

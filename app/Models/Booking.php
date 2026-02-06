@@ -7,6 +7,7 @@ use App\Models\Event;
 use App\Models\Service;
 use App\Models\User; // ✅ Added User model
 use App\Models\Coordinator;
+use App\Models\Payment;
 
 class Booking extends Model
 {
@@ -58,4 +59,8 @@ public function services()
         ->withPivot('quantity', 'price')
         ->withTimestamps();
 }
+public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
 }

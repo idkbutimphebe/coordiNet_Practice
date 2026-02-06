@@ -8,6 +8,7 @@ use App\Models\Reviews;
 use App\Models\User;
 use App\Models\Event;
 use App\Models\Coordinator;
+use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -278,6 +279,75 @@ class CoordinatorController extends Controller
         $totalReviews = $reviews->count();
         return view('coordinator.ratings', compact('reviews','formattedAvg','totalReviews'));
     }
+    // ==========================================
+    // 2. ADDED PAYMENTS FUNCTIONS HERE
+    // ==========================================
+    
+    /**
+     * Show the payments ledger
+     */
+/**
+     * Show the income and payments ledger
+     * This matches your route /coordinator/income
+     */
+public function income()
+{
+    $coordinatorId = $this->requireCoordinatorId();
+
+    // Fetch ONLY confirmed bookings for the dropdown
+    $pendingBookings = Booking::where('coordinator_id', $coordinatorId)
+        ->where('status', 'confirmed') 
+        ->with('client', 'payments')
+        ->get()
+        ->map(function($booking) {
+            // Calculate remaining balance dynamically
+            $paid = $booking->payments->sum('amount');
+            $total = $booking->total_amount ?? $booking->total_price ?? 0;
+            $booking->balance = $total - $paid;
+            return $booking;
+        })
+        ->filter(function($booking) {
+            // Only show clients who haven't paid in full yet
+            return $booking->balance > 0;
+        });
+
+    $payments = Payment::whereHas('booking', function($q) use ($coordinatorId) {
+        $q->where('coordinator_id', $coordinatorId);
+    })->with('booking.client')->latest()->get();
+
+    $totalIncome = $payments->sum('amount');
+
+    return view('coordinator.income', compact('pendingBookings', 'payments', 'totalIncome'));
+}
+    /**
+     * Save a new payment from the modal
+     */
+    public function storePayment(Request $request)
+    {
+        $request->validate([
+            'booking_id' => 'required|exists:bookings,id',
+            'amount' => 'required|numeric|min:1',
+            'date_paid' => 'required|date',
+            'method' => 'required|string',
+            'notes' => 'nullable|string'
+        ]);
+
+        // Security check: Ensure this booking belongs to this coordinator
+        $coordinatorId = $this->requireCoordinatorId();
+        $booking = Booking::where('coordinator_id', $coordinatorId)
+                          ->where('id', $request->booking_id)
+                          ->firstOrFail();
+
+        Payment::create([
+            'booking_id' => $booking->id,
+            'amount' => $request->amount,
+            'date_paid' => $request->date_paid,
+            'method' => $request->method,
+            'notes' => $request->notes,
+        ]);
+
+        return redirect()->back()->with('success', 'Payment recorded successfully!');
+    }
 
     // ---------------- PROFILE ----------------
     public function profile()
@@ -414,5 +484,12 @@ class CoordinatorController extends Controller
 
         return redirect()->back()->with('success', 'Coordinator updated successfully.');
     }
+    public function checkout()
+{
+    $user = Auth::user();
+    // You can pass specific plans or pricing here later
+    return view('coordinator.checkout', compact('user'));
+}
+    
     
 }

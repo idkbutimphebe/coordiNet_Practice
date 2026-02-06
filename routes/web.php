@@ -113,7 +113,7 @@ Route::middleware(['auth'])
 
         // Income & Subscription
         Route::get('/income', fn () => view('coordinator.income'))->name('income');
-        Route::get('/subscription', fn () => view('coordinator.subscription'))->name('subscription');
+        Route::get('/reports', fn () => view('coordinator.reports'))->name('reports');
 
         // Profile
         Route::get('/profile', [CoordinatorController::class, 'profile'])->name('profile');
@@ -122,11 +122,14 @@ Route::middleware(['auth'])
         // Events
         Route::post('/events', [CoordinatorController::class, 'storeEvent'])->name('events.store'); 
 
-        // Payments
-        Route::get('/checkout', [PaymentController::class, 'checkout'])->name('checkout');
-        Route::post('/pay', [PaymentController::class, 'pay'])->name('pay');
-    });
+// Income & Payments
+        Route::get('/income', [CoordinatorController::class, 'income'])->name('income');
+        Route::post('/payments', [CoordinatorController::class, 'storePayment'])->name('payments.store');
 
+        // Subscription & Checkout
+        Route::get('/subscription', fn () => view('coordinator.subscription'))->name('subscription');
+        Route::get('/checkout', [CoordinatorController::class, 'checkout'])->name('checkout'); // FIXED THIS LINE
+    });
 /*
 |-------------------------------------------------------------------------- 
 | CLIENT ROUTES

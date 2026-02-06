@@ -4,25 +4,41 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Payment extends Model
 {
+    // Explicitly define table name if Laravel is getting confused
+    protected $table = 'payments';
+
     protected $fillable = [
-        'coordinator_id',
+        'booking_id',
+        'coordinator_id', 
         'subscription_id',
         'amount',
-        'gcash_reference',
-        'payment_method',
-        'status'
+        'date_paid',
+        'method',
+        'notes',
+        'status' 
     ];
 
-    public function coordinator():BelongsTo
+    // This converts the string date from the database into a Carbon object automatically
+    protected $casts = [
+        'date_paid' => 'date',
+        'amount' => 'decimal:2',
+    ];
+
+    public function booking(): BelongsTo
     {
-        return $this->belongsTo(CoordinatorsInfo::class);
+        return $this->belongsTo(Booking::class);
     }
-    public function subscription():BelongsTo
+
+    public function coordinator(): BelongsTo
     {
-        return $this->belongsTo(Subscription::class,'subscription_id');
+        return $this->belongsTo(Coordinator::class, 'coordinator_id'); 
+    }
+
+    public function subscription(): BelongsTo
+    {
+        return $this->belongsTo(Subscription::class, 'subscription_id');
     }
 }

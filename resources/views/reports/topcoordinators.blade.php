@@ -31,6 +31,37 @@
         </div>
     </div>
 
+    <!-- FILTERS -->
+    <div class="bg-white rounded-xl shadow-sm p-5 no-print">
+        <form method="GET" action="{{ route('reports.topcoordinators') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            
+            <!-- Search Bar -->
+            <div class="md:col-span-3">
+                <label class="block text-sm font-medium text-[#3E3F29] mb-2">Search</label>
+                <input type="text" 
+                       name="search" 
+                       value="{{ request('search') }}"
+                       placeholder="Search by coordinator name..."
+                       class="w-full px-4 py-2 rounded-lg border border-[#A1BC98] 
+                              focus:outline-none focus:ring-2 focus:ring-[#A1BC98]">
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="md:col-span-3 flex gap-3">
+                <button type="submit" 
+                        class="px-6 py-2 rounded-lg bg-[#A1BC98] text-[#3E3F29] 
+                               font-medium hover:bg-[#8aa880] transition">
+                    Apply Filter
+                </button>
+                <a href="{{ route('reports.topcoordinators') }}" 
+                   class="px-6 py-2 rounded-lg border border-[#A1BC98] text-[#3E3F29] 
+                          hover:bg-[#E3EAD7] transition">
+                    Clear Filter
+                </a>
+            </div>
+        </form>
+    </div>
+
     <div class="print-area bg-white rounded-2xl shadow-sm overflow-hidden">
 
         <table class="w-full text-sm text-left">
