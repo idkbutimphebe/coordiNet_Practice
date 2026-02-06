@@ -3,19 +3,14 @@
 @section('content')
 
 @php
-    use App\Models\Reviews;
-    use App\Models\Booking;
-    use Illuminate\Support\Facades\Auth;
-
     // Get the User model associated with this coordinator profile
-    // (Assuming Coordinator model belongsTo User)
     $coordinatorUser = $coordinator->user; 
 
     // Average rating and total reviews
-    $averageRating = Reviews::where('coordinator_id', $coordinator->id)->avg('rating') ?? 0;
+    $averageRating = \App\Models\Reviews::where('coordinator_id', $coordinator->id)->avg('rating') ?? 0;
     $averageRating = number_format($averageRating, 1);
 
-    $totalReviews = Reviews::where('coordinator_id', $coordinator->id)->count();
+    $totalReviews = \App\Models\Reviews::where('coordinator_id', $coordinator->id)->count();
 
     // Fix: Get services from coordinator
     $servicesRaw = $coordinator->services ?? [];
@@ -27,7 +22,7 @@
     $portfolio = $coordinator->portfolio ?? [];
 
     // CHECK: Has the current client completed an event with this coordinator?
-    $hasCompletedBooking = Booking::where('client_id', Auth::id())
+    $hasCompletedBooking = \App\Models\Booking::where('client_id', \Illuminate\Support\Facades\Auth::id())
         ->where('coordinator_id', $coordinator->id)
         ->where(function($query) {
             $query->where('status', 'completed')
@@ -47,7 +42,7 @@
 
             <div class="flex-1">
                 <h1 class="text-2xl font-extrabold text-[#3E3F29]">
-                    {{ $coordinatorUser->name ?? $coordinator->name }}
+                    {{ $coordinatorUser->name ?? $coordinator->coordinator_name }}
                 </h1>
 
                 <p class="text-sm text-gray-600">
@@ -116,7 +111,7 @@
             </h2>
 
             <p class="text-sm text-gray-600 leading-relaxed">
-                {{ $coordinator->bio ?? 'No bio provided yet ✨' }}
+                {{ $coordinator->bio ?? $coordinatorUser->bio ?? 'No bio provided yet ✨' }}
             </p>
         </div>
 
@@ -126,8 +121,9 @@
             </h2>
 
             @php
-                $reviews = Reviews::where('coordinator_id', $coordinator->id)
-                            ->with('client.user') // Adjusted to get client name correctly
+                $reviews = \App\Models\Reviews::where('coordinator_id', $coordinator->id)
+                            ->with('client') 
+                            ->latest()
                             ->get();
             @endphp
 
@@ -136,7 +132,7 @@
                     <div class="border-b last:border-none pb-4 mb-4 last:mb-0">
                         <div class="flex items-center justify-between">
                             <p class="font-medium text-[#3E3F29]">
-                                {{ $review->client->user->name ?? $review->client->name ?? 'Anonymous' }}
+                                {{ $review->client->name ?? 'Anonymous' }}
                             </p>
                             <div class="flex">
                                 @for($i = 1; $i <= 5; $i++)
@@ -206,7 +202,7 @@
             <h2 class="font-semibold mb-3">Pricing</h2>
             
             <p class="text-4xl font-extrabold">
-                ₱{{ number_format($coordinator->rate ?? 0, 2) }}
+                ₱{{ number_format($coordinator->rate ?? $coordinatorUser->rate ?? 0, 2) }}
             </p>
             <p class="text-sm mb-5 opacity-90">per event</p>
 
@@ -216,22 +212,132 @@
                 <li>✓ Client support</li>
             </ul>
 
-            <form action="{{ route('client.bookings.store') }}" method="POST">
-                @csrf
-                <input type="hidden" name="coordinator_id" value="{{ $coordinatorUser->id }}">
-                <input type="hidden" name="event_date" value="{{ date('Y-m-d', strtotime('+1 week')) }}">
-                <input type="hidden" name="start_time" value="08:00">
-                <input type="hidden" name="end_time" value="17:00">
-                
-                <button type="button" onclick="window.location.href='{{ route('client.bookings.index') }}'" 
-                   class="block w-full mt-6 py-3 rounded-2xl 
-                          bg-white text-[#3E3F29] font-semibold 
-                          hover:opacity-90 transition text-center cursor-pointer">
-                    Book Now
-                </button>
-            </form>
+            {{-- UPDATED: Button now triggers the modal instead of submitting immediately --}}
+            <button type="button" 
+               onclick="document.getElementById('bookingModal-{{ $coordinator->id }}').classList.remove('hidden')"
+               class="block w-full mt-6 py-3 rounded-2xl 
+                      bg-white text-[#3E3F29] font-semibold 
+                      hover:opacity-90 transition text-center cursor-pointer shadow-lg">
+                Book Now
+            </button>
         </div>
 
+    </div>
+</div>
+
+<div id="bookingModal-{{ $coordinator->id }}" 
+     class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center transition-opacity duration-300">
+
+    <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md relative transform transition-transform duration-300 scale-95">
+        
+        <button type="button" onclick="document.getElementById('bookingModal-{{ $coordinator->id }}').classList.add('hidden')" 
+                class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors text-2xl font-bold">
+            &times;
+        </button>
+
+        <h2 class="text-2xl font-extrabold text-[#3E3F29] mb-4 text-center">
+            Book an Event with <span class="text-[#778873]">{{ $coordinator->name }}</span>
+        </h2>
+
+        <p class="text-gray-600 text-sm mb-6 text-center">
+            Fill out the details below to schedule your event.
+        </p>
+
+        <form method="POST" action="{{ route('client.bookings.store') }}" class="space-y-4">
+            @csrf
+
+            <input type="hidden" name="coordinator_id" value="{{ $coordinator->id }}">
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Choose Event Type
+                </label>
+
+                @php
+                    $availableCoordinatorEventTypes = is_array($coordinator->event_types ?? null)
+                        ? ($coordinator->event_types ?? [])
+                        : [];
+                @endphp
+
+                <select name="event_type" class="w-full px-4 py-2 border border-gray-300 rounded-lg
+                        focus:ring-2 focus:ring-[#778873] focus:border-[#3E3F29]">
+                    <option value="">-- Select Event (Optional) --</option>
+
+                    @forelse($availableCoordinatorEventTypes as $eventType)
+                        <option value="{{ $eventType }}"
+                            {{ old('event_type') == $eventType ? 'selected' : '' }}>
+                            {{ $eventType }}
+                        </option>
+                    @empty
+                        <option value="" disabled>No event types available</option>
+                    @endforelse
+                </select>
+
+                @error('event_type')
+                    <span class="text-red-500 text-xs">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Event Location</label>
+                <input type="text" name="location" 
+                       value="{{ old('location') }}"
+                       required
+                       placeholder="e.g. Grand Ballroom, City Hotel, etc."
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#778873] focus:border-[#3E3F29]">
+                @error('location')
+                    <span class="text-red-500 text-xs">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Event Date</label>
+                <input type="date" name="event_date" 
+                       value="{{ old('event_date') }}"
+                       required
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#778873] focus:border-[#3E3F29]">
+                @error('event_date')
+                    <span class="text-red-500 text-xs">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <div class="flex gap-4">
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+                    <input type="time" name="start_time" 
+                           value="{{ old('start_time') }}"
+                           required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#778873] focus:border-[#3E3F29]">
+                    @error('start_time')
+                        <span class="text-red-500 text-xs">{{ $message }}</span>
+                    @enderror
+                </div>
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+                    <input type="time" name="end_time" 
+                           value="{{ old('end_time') }}"
+                           required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#778873] focus:border-[#3E3F29]">
+                    @error('end_time')
+                        <span class="text-red-500 text-xs">{{ $message }}</span>
+                    @enderror
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <textarea name="note" rows="3" placeholder="Additional details..." 
+                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#778873] focus:border-[#3E3F29]">{{ old('note') }}</textarea>
+                @error('note')
+                    <span class="text-red-500 text-xs">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <button type="submit" 
+                    class="w-full bg-[#3E3F29] hover:bg-[#556644] text-white font-semibold py-2 rounded-xl shadow-sm transition-colors">
+                Book Event
+            </button>
+        </form>
     </div>
 </div>
 

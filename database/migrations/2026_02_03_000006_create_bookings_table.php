@@ -6,33 +6,37 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
-{
-    if (!Schema::hasTable('bookings')) {
+    {
+        // 1. If the table exists but is old/wrong, we drop it to rebuild it fresh.
+        // This ensures the 'location' column definitely gets created.
+        if (Schema::hasTable('bookings')) {
+            Schema::drop('bookings');
+        }
+
         Schema::create('bookings', function (Blueprint $table) {
             $table->id();
             $table->foreignId('client_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('coordinator_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('event_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('coordinator_id')->constrained('users')->cascadeOnDelete(); // Assuming coordinators are in 'users' table? Or 'coordinators'?
+            
+            // Note: Check if 'events' table exists. If not, remove the constrained() part temporarily.
+            $table->foreignId('event_id')->constrained()->cascadeOnDelete(); 
+            
             $table->string('event_name')->nullable();
             $table->date('event_date');
+            $table->string('location')->nullable(); // ✅ Added here
             $table->time('start_time');
             $table->time('end_time');
-            $table->enum('status', ['pending','confirmed','cancelled'])->default('pending');
-            $table->decimal('total_amount', 10, 2);
+            
+            // ✅ ADDED 'completed' to this list so your controller doesn't crash
+            $table->enum('status', ['pending', 'confirmed', 'cancelled', 'completed'])->default('pending');
+            
+            $table->decimal('total_amount', 10, 2)->default(0); // Added default 0 for safety
             $table->text('note')->nullable();
             $table->timestamps();
         });
     }
-}
 
-
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('bookings');

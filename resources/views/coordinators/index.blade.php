@@ -14,56 +14,71 @@
         </p>
     </div>
 
-    <!-- SEARCH + FILTER -->
-    <form method="GET" class="flex flex-col md:flex-row gap-3 relative">
+<!-- SEARCH + FILTER -->
+<form method="GET" class="flex flex-col md:flex-row gap-3 relative">
 
-        <input type="text"
-               name="search"
-               placeholder="Search by name or address..."
-               value="{{ request('search') }}"
-               class="w-full md:flex-1 px-4 py-3 rounded-lg
-                      border border-[#A1BC98]
-                      focus:ring-2 focus:ring-[#778873]
-                      focus:outline-none text-sm">
+    <!-- SEARCH INPUT -->
+    <input type="text"
+           name="search"
+           placeholder="Search by name or address..."
+           value="{{ request('search') }}"
+           class="w-full md:flex-1 px-4 py-3 rounded-lg
+                  border border-[#A1BC98]
+                  focus:ring-2 focus:ring-[#778873]
+                  focus:outline-none text-sm">
 
-        <div class="flex gap-3 relative">
-            <details class="group">
-                <summary
-                    class="flex items-center gap-2 px-6 py-3 rounded-lg
-                           bg-[#3E3F29] text-white font-semibold text-sm
-                           cursor-pointer hover:opacity-90 transition
-                           list-none">
-                    <span>
-                        {{ request('event_type') ? ucfirst(request('event_type')) : 'All Events' }}
-                    </span>
-                </summary>
+    <div class="flex gap-3 relative">
 
-                <div class="absolute right-0 mt-2 w-56
-                            bg-white rounded-xl shadow-xl
-                            border border-gray-100 z-20">
-                    @foreach(['wedding','birthday','others'] as $type)
-                        <label class="flex items-center gap-3 px-4 py-3 text-sm hover:bg-[#F6F8F5] cursor-pointer">
-                            <input type="radio"
-                                   name="event_type"
-                                   value="{{ $type }}"
-                                   class="hidden peer"
-                                   onchange="this.form.submit()"
-                                   {{ request('event_type') == $type ? 'checked' : '' }}>
-                            <span class="w-4 h-4 rounded-full border border-gray-400 peer-checked:bg-[#3E3F29]"></span>
-                            {{ ucfirst($type) }}
-                        </label>
-                    @endforeach
-                </div>
-            </details>
+        <!-- FILTER DROPDOWN -->
+        <details class="relative group">
+            <summary
+                class="flex items-center gap-2 px-6 py-3 rounded-lg
+                       bg-[#3E3F29] text-white font-semibold text-sm
+                       cursor-pointer hover:opacity-90 transition
+                       list-none select-none">
+                {{ request('event_type') ? ucfirst(request('event_type')) : 'All Events' }}
+            </summary>
 
-            <button type="submit"
-                    class="px-8 py-3 rounded-lg
-                           bg-[#3E3F29] text-white font-semibold text-sm
-                           hover:opacity-90 transition">
-                Search
-            </button>
-        </div>
-    </form>
+            <!-- DROPDOWN PANEL -->
+            <div class="absolute right-0 mt-2 w-56
+                        bg-white rounded-xl shadow-xl
+                        border border-gray-100 z-30">
+
+                @foreach(['wedding','birthday','others'] as $type)
+                    <label
+                        class="flex items-center gap-3 px-4 py-3 text-sm
+                               hover:bg-[#F6F8F5] cursor-pointer">
+
+                        <!-- KEEP SEARCH VALUE WHEN FILTERING -->
+                        <input type="hidden" name="search" value="{{ request('search') }}">
+
+                        <input type="radio"
+                               name="event_type"
+                               value="{{ $type }}"
+                               class="hidden peer"
+                               onchange="this.form.submit()"
+                               {{ request('event_type') === $type ? 'checked' : '' }}>
+
+                        <span class="w-4 h-4 rounded-full border border-gray-400
+                                     peer-checked:bg-[#3E3F29]"></span>
+
+                        {{ ucfirst($type) }}
+                    </label>
+                @endforeach
+            </div>
+        </details>
+
+        <!-- SEARCH BUTTON -->
+        <button type="submit"
+                class="px-8 py-3 rounded-lg
+                       bg-[#3E3F29] text-white font-semibold text-sm
+                       hover:opacity-90 transition">
+            Search
+        </button>
+
+    </div>
+</form>
+
 
     <!-- COORDINATORS GRID -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-10">

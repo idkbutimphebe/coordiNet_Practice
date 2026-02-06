@@ -9,6 +9,7 @@ use App\Models\Coordinator;
 use App\Models\Client;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Builder;
 
 class AdminController extends Controller
 {
@@ -255,9 +256,49 @@ public function bookingReport()
         return view('bookings.show', compact('booking'));
     }
 
-    public function coordinators()
-    {
-        $coordinators = Coordinator::all(); 
-        return view('admin.coordinators.index', compact('coordinators'));
+    public function coordinators(Request $request)
+{
+    // Start the query and eager load relationships (user, events) to prevent N+1 issues
+    $query = Coordinator::with(['user', 'events']);
+
+    // 1. Search Logic (Name or Address)
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where(function ($q) use ($search) {
+            $q->where('address', 'like', "%{$search}%")
+              ->orWhere('coordinator_name', 'like', "%{$search}%")
+              ->orWhereHas('user', function ($u) use ($search) {
+                  $u->where('name', 'like', "%{$search}%")
+                    ->orWhere('location', 'like', "%{$search}%");
+              });
+        });
     }
+
+    // 2. Filter Logic (Event Type)
+    if ($request->filled('event_type')) {
+        $type = $request->event_type;
+        // Filter coordinators who have an event of this type
+        // OR whose expertise string matches the type
+        $query->where(function ($q) use ($type) {
+            $q->whereHas('events', function ($e) use ($type) {
+                $e->where('event_type', 'like', "%{$type}%");
+            })
+            ->orWhere('expertise', 'like', "%{$type}%");
+        });
+    }
+
+    // Get results
+    $rawCoordinators = $query->get();
+
+    // 3. Grouping Logic (Crucial for your View)
+    // We group the collection by event_type to match your @foreach($coordinators as $event => $items)
+    $coordinators = $rawCoordinators->groupBy(function ($item) {
+        return $item->events->first()->event_type 
+            ?? $item->event_type 
+            ?? $item->expertise 
+            ?? 'General';
+    });
+
+    return view('admin.coordinators.index', compact('coordinators'));
+}
 }

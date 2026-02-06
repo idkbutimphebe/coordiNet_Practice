@@ -31,8 +31,7 @@
 <!-- ================= TOP GRID ================= -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
 
-    <!-- ===== LEFT : PENDING REQUESTS ===== -->
-    <div class="lg:col-span-2 bg-white rounded-2xl shadow p-5">
+ <div class="lg:col-span-2 bg-white rounded-2xl shadow p-5">
         <div class="flex justify-between items-center mb-4">
             <h3 class="font-bold text-[#3E3F29]">Pending Requests</h3>
 
@@ -44,7 +43,8 @@
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-            @forelse($requests as $r)
+            {{-- ✅ FIXED: Added collect()->take(3) to limit to 3 items --}}
+            @forelse(collect($requests)->take(3) as $r)
                 <div class="rounded-xl overflow-hidden shadow-sm bg-[#F6F8F5] group hover:-translate-y-1 transition-transform duration-300">
 
                     <div class="h-24 bg-[#A1BC98] flex items-end justify-center">
@@ -60,7 +60,7 @@
                         </h4>
 
                         <span class="inline-block px-2 py-0.5 rounded-md bg-[#3E3F29]/10 text-[#3E3F29]
-                                     text-[10px] font-bold uppercase tracking-wider mb-2">
+                                             text-[10px] font-bold uppercase tracking-wider mb-2">
                             {{ $r['type'] }}
                         </span>
 

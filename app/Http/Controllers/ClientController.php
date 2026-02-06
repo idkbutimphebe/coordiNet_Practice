@@ -112,6 +112,7 @@ public function dashboard()
             'coordinator_id' => 'required|exists:users,id',
             'event_type'     => 'nullable|string|max:255',
             'event_date'     => 'required|date',
+            'location'       => 'required|string|max:255',
             'start_time'     => 'required',
             'end_time'       => 'required',
             'note'           => 'nullable|string|max:1000',
@@ -141,6 +142,7 @@ public function dashboard()
             'event_id'       => $event->id,
             'event_name'     => $eventName,
             'event_date'     => $request->event_date,
+            'location'       => $request->location,
             'start_time'     => $request->start_time,
             'end_time'       => $request->end_time,
             'note'           => $request->note,
@@ -273,10 +275,10 @@ public function viewCoordinator($id)
         $totalReviews = Reviews::where('coordinator_id', $coordinator->id)->count();
 
         // 5. Get Reviews List
-        $reviews = Reviews::where('coordinator_id', $coordinator->id)
-            ->with('client.user')
-            ->latest()
-            ->get();
+$reviews = Reviews::where('coordinator_id', $coordinator->id)
+    ->with('client') // <--- Just 'client'. The client IS the user.
+    ->latest()
+    ->get();
 
         // 6. Check if current client has a completed booking (for showing rating stars)
         $hasCompletedBooking = false;
@@ -317,4 +319,27 @@ public function viewCoordinator($id)
 
         return view('client.coordinators', compact('coordinators'));
     }
+    public function update(Request $request, Booking $booking)
+{
+    // Validate
+    $request->validate([
+        'event_date' => 'required|date',
+        'start_time' => 'required',
+        'end_time'   => 'required',
+        'note'       => 'nullable|string',
+        // add validation for event_type if needed
+    ]);
+
+    // Update
+    $booking->update([
+        'event_date' => $request->event_date,
+        'start_time' => $request->start_time,
+        'end_time'   => $request->end_time,
+        'note'       => $request->note, // or 'notes' depending on your DB column
+        'event_type' => $request->event_type,
+    ]);
+
+    return back()->with('success', 'Booking details updated successfully.');
+}
+
 }

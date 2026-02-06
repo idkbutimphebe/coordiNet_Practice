@@ -144,8 +144,60 @@ class CoordinatorController extends Controller
         return $this->updateBooking(request(), $id);
     }
 
-    // ---------------- SCHEDULE ----------------
-    public function schedule() { return view('coordinator.schedule'); }
+    // ---------------- SCHEDULE (UPDATED) ----------------
+    public function schedule(Request $request) 
+    { 
+        // 1. Get Coordinator
+        $coordinatorId = $this->requireCoordinatorId();
+
+        // 2. Determine Month (from URL or Current)
+        $date = $request->has('month') 
+                ? Carbon::parse($request->input('month')) 
+                : Carbon::now();
+
+        // 3. Calculate Calendar Variables
+        $startOfMonth = $date->copy()->startOfMonth();
+        $endOfMonth   = $date->copy()->endOfMonth();
+        
+        // Days to skip before 1st of month (0=Sun, 1=Mon...)
+        $emptySlots = $startOfMonth->dayOfWeek; 
+        
+        // Total days in month
+        $daysInMonth = $date->daysInMonth;
+
+        // 4. Navigation Links
+        $prevMonth = $date->copy()->subMonth()->format('Y-m-d');
+        $nextMonth = $date->copy()->addMonth()->format('Y-m-d');
+
+        // 5. Fetch Busy Dates
+        
+        // Client Bookings
+        $clientBookings = Booking::where('coordinator_id', $coordinatorId)
+            ->whereIn('status', ['confirmed', 'paid', 'pending']) 
+            ->whereBetween('event_date', [$startOfMonth, $endOfMonth])
+            ->pluck('event_date')
+            ->map(fn($d) => Carbon::parse($d)->format('j')) // Get day number (no leading zero)
+            ->toArray();
+
+        // Personal Schedules
+        $personalSchedules = Schedule::where('coordinator_id', $coordinatorId)
+            ->whereBetween('date', [$startOfMonth, $endOfMonth])
+            ->pluck('date')
+            ->map(fn($d) => Carbon::parse($d)->format('j'))
+            ->toArray();
+
+        // Merge and clean
+        $bookedDates = array_unique(array_merge($clientBookings, $personalSchedules));
+
+        return view('coordinator.schedule', compact(
+            'date', 
+            'emptySlots', 
+            'daysInMonth', 
+            'prevMonth', 
+            'nextMonth', 
+            'bookedDates'
+        ));
+    }
 
     public function getScheduleEvents()
     {
@@ -362,4 +414,5 @@ class CoordinatorController extends Controller
 
         return redirect()->back()->with('success', 'Coordinator updated successfully.');
     }
+    
 }

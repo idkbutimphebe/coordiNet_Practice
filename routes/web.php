@@ -145,6 +145,8 @@ Route::middleware(['auth'])->prefix('client')->name('client.')->group(function (
     Route::get('/bookings', [ClientController::class, 'bookings'])->name('bookings.index');
     Route::get('/bookings/{booking}', [ClientController::class, 'showBooking'])->name('bookings.show');
     Route::post('/bookings', [ClientController::class, 'storeBooking'])->name('bookings.store');
+    // ADD THIS LINE:
+    Route::put('/bookings/{id}', [BookingController::class, 'update'])->name('bookings.update');
 
     // Ratings
     Route::post('/ratings', [RatingController::class, 'store'])->name('ratings.store');

@@ -133,19 +133,16 @@
             </div>
         </div>
 <!-- BOOKING MODAL -->
-<!-- BOOKING MODAL -->
 <div id="bookingModal-{{ $coordinator->id }}" 
      class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center transition-opacity duration-300">
 
     <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md relative transform transition-transform duration-300 scale-95">
         
-        <!-- CLOSE BUTTON -->
         <button type="button" onclick="document.getElementById('bookingModal-{{ $coordinator->id }}').classList.add('hidden')" 
                 class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors text-2xl font-bold">
             &times;
         </button>
 
-        <!-- MODAL HEADER -->
         <h2 class="text-2xl font-extrabold text-[#3E3F29] mb-4 text-center">
             Book an Event with <span class="text-[#778873]">{{ $coordinator->name }}</span>
         </h2>
@@ -154,13 +151,11 @@
             Fill out the details below to schedule your event.
         </p>
 
-        <!-- BOOKING FORM -->
         <form method="POST" action="{{ route('client.bookings.store') }}" class="space-y-4">
             @csrf
 
             <input type="hidden" name="coordinator_id" value="{{ $coordinator->id }}">
 
-            <!-- Choose Event Type -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">
                     Choose Event Type
@@ -173,7 +168,7 @@
                 @endphp
 
                 <select name="event_type" class="w-full px-4 py-2 border border-gray-300 rounded-lg
-                       focus:ring-2 focus:ring-[#778873] focus:border-[#3E3F29]">
+                        focus:ring-2 focus:ring-[#778873] focus:border-[#3E3F29]">
                     <option value="">-- Select Event (Optional) --</option>
 
                     @forelse($availableCoordinatorEventTypes as $eventType)
@@ -191,7 +186,18 @@
                 @enderror
             </div>
 
-            <!-- Event Date -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Event Location</label>
+                <input type="text" name="location" 
+                       value="{{ old('location') }}"
+                       required
+                       placeholder="e.g. Grand Ballroom, City Hotel, etc."
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#778873] focus:border-[#3E3F29]">
+                @error('location')
+                    <span class="text-red-500 text-xs">{{ $message }}</span>
+                @enderror
+            </div>
+
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Event Date</label>
                 <input type="date" name="event_date" 
@@ -203,7 +209,6 @@
                 @enderror
             </div>
 
-            <!-- Time -->
             <div class="flex gap-4">
                 <div class="flex-1">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
@@ -227,7 +232,6 @@
                 </div>
             </div>
 
-            <!-- Notes -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
                 <textarea name="note" rows="3" placeholder="Additional details..." 
@@ -237,7 +241,6 @@
                 @enderror
             </div>
 
-            <!-- Submit -->
             <button type="submit" 
                     class="w-full bg-[#3E3F29] hover:bg-[#556644] text-white font-semibold py-2 rounded-xl shadow-sm transition-colors">
                 Book Event

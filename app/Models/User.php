@@ -121,4 +121,10 @@ public function bookingsAsClient()
 {
     return $this->hasMany(Booking::class, 'client_id');
 }
+
+public function getPhoneNumberAttribute()
+    {
+        // "client" refers to the public function client() { return $this->hasOne(Client::class); }
+        return $this->client->phone_number ?? null; 
+    }
 }

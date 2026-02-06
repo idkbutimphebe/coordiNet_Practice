@@ -22,6 +22,7 @@ class Booking extends Model
         'event_id',
         'event_name', 
         'event_date',
+        'location',
         'start_time',
         'end_time',
         'status',
@@ -35,6 +36,7 @@ class Booking extends Model
 public function client()
 {
     return $this->belongsTo(User::class, 'client_id');
+    
 }
 
 // Link to the coordinator (Coordinator model, not User)
