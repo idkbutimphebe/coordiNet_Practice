@@ -1,0 +1,300 @@
+@extends('layouts.coordinator')
+
+@section('content')
+<div class="p-6 space-y-6">
+
+    <!-- PAGE HEADER -->
+    <div class="flex items-center justify-between no-print">
+        <div>
+            <h1 class="text-3xl font-extrabold text-[#3E3F29] tracking-tight">
+                Income Report
+            </h1>
+            <p class="text-sm text-gray-600 mt-1">
+                Detailed breakdown of all payments received
+            </p>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <a href="{{ route('coordinator.dashboard') }}"
+               class="px-4 py-2 text-sm rounded-lg
+                      border border-[#A1BC98]
+                      text-[#3E3F29]
+                      hover:bg-[#E3EAD7] transition">
+                ← Back
+            </a>
+
+            <button onclick="window.print()" 
+                    class="px-4 py-2 text-sm rounded-lg
+                           bg-[#3E3F29] text-white
+                           hover:bg-[#2c2d1f] transition">
+                🖨️ Print
+            </button>
+        </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="bg-white rounded-xl shadow-sm p-5 no-print">
+        <form method="GET" action="{{ route('coordinator.reports.income') }}" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            
+            <!-- Search Bar -->
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-[#3E3F29] mb-2">Search</label>
+                <input type="text" 
+                       name="search" 
+                       value="{{ request('search') }}"
+                       placeholder="Search by client or event..."
+                       class="w-full px-4 py-2 rounded-lg border border-[#A1BC98] 
+                              focus:outline-none focus:ring-2 focus:ring-[#A1BC98]">
+            </div>
+
+            <!-- Date From -->
+            <div>
+                <label class="block text-sm font-medium text-[#3E3F29] mb-2">Date From</label>
+                <input type="date" 
+                       name="date_from" 
+                       value="{{ request('date_from') }}"
+                       class="w-full px-4 py-2 rounded-lg border border-[#A1BC98] 
+                              focus:outline-none focus:ring-2 focus:ring-[#A1BC98]">
+            </div>
+
+            <!-- Date To -->
+            <div>
+                <label class="block text-sm font-medium text-[#3E3F29] mb-2">Date To</label>
+                <input type="date" 
+                       name="date_to" 
+                       value="{{ request('date_to') }}"
+                       class="w-full px-4 py-2 rounded-lg border border-[#A1BC98] 
+                              focus:outline-none focus:ring-2 focus:ring-[#A1BC98]">
+            </div>
+
+            <!-- Payment Method -->
+            <div>
+                <label class="block text-sm font-medium text-[#3E3F29] mb-2">Method</label>
+                <select name="method" 
+                        class="w-full px-4 py-2 rounded-lg border border-[#A1BC98] 
+                               focus:outline-none focus:ring-2 focus:ring-[#A1BC98]">
+                    <option value="">All Methods</option>
+                    <option value="cash" {{ request('method') == 'cash' ? 'selected' : '' }}>Cash</option>
+                    <option value="gcash" {{ request('method') == 'gcash' ? 'selected' : '' }}>GCash</option>
+                    <option value="bank" {{ request('method') == 'bank' ? 'selected' : '' }}>Bank</option>
+                </select>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="md:col-span-5 flex gap-3">
+                <button type="submit" 
+                        class="px-6 py-2 rounded-lg bg-[#A1BC98] text-[#3E3F29] 
+                               font-medium hover:bg-[#8aa880] transition">
+                    Apply Filters
+                </button>
+                <a href="{{ route('coordinator.reports.income') }}" 
+                   class="px-6 py-2 rounded-lg border border-[#A1BC98] text-[#3E3F29] 
+                          hover:bg-[#E3EAD7] transition">
+                    Clear Filters
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- TABLE CARD -->
+    <div class="print-area bg-white rounded-2xl shadow-sm overflow-hidden print:shadow-none">
+
+        <!-- Print Header (only visible when printing) -->
+        <div class="print-header">
+            <h2 class="text-2xl font-bold text-[#3E3F29] mb-2">Income Report</h2>
+            <p class="text-sm text-gray-600 mb-4">Generated on {{ now()->format('F d, Y') }}</p>
+        </div>
+
+        <table class="w-full text-sm text-left">
+            <thead class="bg-[#A1BC98]/40 text-[#3E3F29]">
+                <tr>
+                    <th class="py-3 px-5 font-semibold">#</th>
+                    <th class="py-3 px-5 font-semibold">Client</th>
+                    <th class="py-3 px-5 font-semibold">Event</th>
+                    <th class="py-3 px-5 font-semibold">Amount</th>
+                    <th class="py-3 px-5 font-semibold">Method</th>
+                    <th class="py-3 px-5 font-semibold">Date Paid</th>
+                    <th class="py-3 px-5 font-semibold">Ref No.</th> 
+                </tr>
+            </thead>
+
+            <tbody class="divide-y divide-[#778873]/20">
+                @forelse($payments as $payment)
+                    <tr class="hover:bg-[#A1BC98]/20 transition print:hover:bg-transparent">
+                        <td class="py-3 px-5 font-bold text-[#3E3F29]">{{ $payment->id }}</td>
+                        
+                        <td class="py-3 px-5 text-[#3E3F29]">
+                            {{ $payment->booking->client->name ?? 'N/A' }}
+                        </td>
+                        
+                        <td class="py-3 px-5 text-gray-700">
+                            {{ $payment->booking->event->name ?? $payment->booking->event_name ?? 'N/A' }}
+                        </td>
+                        
+                        <td class="py-3 px-5 font-bold text-[#3E3F29]">
+                            ₱{{ number_format($payment->amount, 2) }}
+                        </td>
+                        
+                        <td class="py-3 px-5">
+                            <span class="inline-block px-3 py-1 text-xs rounded-full
+                                {{ $payment->method === 'cash' ? 'bg-green-100 text-green-800' : 
+                                   ($payment->method === 'gcash' ? 'bg-blue-100 text-blue-800' : 
+                                   'bg-purple-100 text-purple-800') }}">
+                                {{ ucfirst($payment->method) }}
+                            </span>
+                        </td>
+                        
+                        <td class="py-3 px-5 text-gray-700">
+                            {{ \Carbon\Carbon::parse($payment->date_paid)->format('M d, Y') }}
+                        </td>
+                        
+                        {{-- REFERENCE NUMBER DISPLAY - FIXED --}}
+                        <td class="py-3 px-5">
+                            @if(!empty($payment->reference_number))
+                                <span class="font-mono font-bold text-[#3E3F29] bg-gray-100 px-2 py-1 rounded">
+                                    {{ $payment->reference_number }}
+                                </span>
+                            @elseif(!empty($payment->ref_no))
+                                <span class="font-mono font-bold text-[#3E3F29] bg-gray-100 px-2 py-1 rounded">
+                                    {{ $payment->ref_no }}
+                                </span>
+                            @else
+                                <span class="text-gray-400 italic">---</span>
+                            @endif
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="7" class="py-8 px-5 text-center text-gray-500">
+                            <p class="font-semibold">No payments found</p>
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+
+            @if($payments->count() > 0)
+                <tfoot class="bg-[#3E3F29] text-white font-bold">
+                    <tr>
+                        <td colspan="3" class="py-3 px-5 text-right">TOTAL:</td>
+                        <td class="py-3 px-5">₱{{ number_format($payments->sum('amount'), 2) }}</td>
+                        <td colspan="3" class="py-3 px-5"></td>
+                    </tr>
+                </tfoot>
+            @endif
+        </table>
+
+    </div>
+
+    <!-- PAGINATION -->
+    @if($payments->hasPages())
+        <div class="mt-6 py-4 no-print">
+            <div class="flex justify-center">
+                {{ $payments->appends(request()->query())->links() }}
+            </div>
+        </div>
+    @endif
+
+</div>
+
+<!-- PRINT STYLES -->
+<style>
+/* Print Header - Hidden by default, shown only in print */
+.print-header {
+    display: none;
+}
+
+@media print {
+    /* Hide everything except print area */
+    body * {
+        visibility: hidden;
+    }
+    
+    .print-area, .print-area * {
+        visibility: visible;
+    }
+    
+    .print-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
+
+    /* Show print header */
+    .print-header {
+        display: block;
+        padding: 20px;
+        border-bottom: 2px solid #A1BC98;
+        margin-bottom: 20px;
+    }
+
+    /* Hide elements with no-print class */
+    .no-print {
+        display: none !important;
+    }
+
+    /* Reset backgrounds */
+    body {
+        background: white !important;
+    }
+
+    /* Table styling */
+    table {
+        border-collapse: collapse;
+        width: 100%;
+        page-break-inside: auto;
+    }
+
+    tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+
+    th, td {
+        border: 1px solid #A1BC98 !important;
+        padding: 12px 20px !important;
+    }
+
+    th {
+        background: #A1BC98 !important;
+        color: #3E3F29 !important;
+        font-weight: 600 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    tfoot {
+        background: #3E3F29 !important;
+        color: white !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* Method badges */
+    .bg-green-100 {
+        background: #dcfce7 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .bg-blue-100 {
+        background: #dbeafe !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .bg-purple-100 {
+        background: #f3e8ff !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* Reference number box */
+    .bg-gray-100 {
+        background: #f3f4f6 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
+</style>
+@endsection

@@ -67,6 +67,12 @@ class Coordinator extends Model
         return $this->hasMany(\App\Models\Reviews::class, 'coordinator_id');
     }
 
+    // Coordinator can have many payments
+    public function payments()
+    {
+        return $this->hasMany(\App\Models\Payment::class, 'coordinator_id');
+    }
+
     /*
     |--------------------------------------------------------------------------
     | SCOPES
@@ -103,5 +109,27 @@ class Coordinator extends Model
         return $this->coordinator_name;
     }
 
-    
+    // Get total income from all payments
+    public function getTotalIncomeAttribute()
+    {
+        return $this->payments()->sum('amount') ?? 0;
+    }
+
+    // Get count of completed bookings
+    public function getCompletedBookingsCountAttribute()
+    {
+        return $this->bookings()->where('status', 'completed')->count();
+    }
+
+    // Get average payment value
+    public function getAveragePaymentValueAttribute()
+    {
+        $totalPayments = $this->payments()->count();
+        if ($totalPayments == 0) {
+            return 0;
+        }
+        return round($this->total_income / $totalPayments, 2);
+    }
+
+
 }

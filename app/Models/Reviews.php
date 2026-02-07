@@ -42,4 +42,9 @@ class Reviews extends Model
     {
         return $this->belongsTo(\App\Models\User::class, 'coordinator_id'); // points to users table
     }
+    public function reviews()
+    {
+        // This links the Booking to the Review
+        return $this->hasOne(Reviews::class, 'booking_id');
+    }
 }

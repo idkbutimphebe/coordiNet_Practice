@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CoordinatorController;
-use App\Http\Controllers\Coordinator\PaymentController;
 use App\Http\Controllers\RatingController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ClientController;
@@ -73,6 +72,7 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
         Route::get('/clients', [AdminController::class, 'clientReport'])->name('clients');
         Route::get('/bookings', [AdminController::class, 'bookingReport'])->name('bookings');
         Route::get('/income', [AdminController::class, 'incomeReport'])->name('income');
+        Route::get('/payments', [AdminController::class, 'paymentReport'])->name('payments');
         Route::get('/ratings', [AdminController::class, 'ratingReport'])->name('ratings');
     });
     
@@ -87,7 +87,6 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
 |-------------------------------------------------------------------------- 
 | COORDINATOR ROUTES
 |-------------------------------------------------------------------------- 
-| Security: Checks are handled in CoordinatorController::__construct()
 */
 Route::middleware(['auth'])
     ->prefix('coordinator')
@@ -111,9 +110,11 @@ Route::middleware(['auth'])
         // Ratings
         Route::get('/ratings', [CoordinatorController::class, 'reviews'])->name('ratings');
 
-        // Income & Subscription
-        Route::get('/income', fn () => view('coordinator.income'))->name('income');
-        Route::get('/reports', fn () => view('coordinator.reports'))->name('reports');
+        Route::get('/income', [CoordinatorController::class, 'income'])->name('income');
+
+        Route::post('/payments', [CoordinatorController::class, 'storePayment'])->name('payments.store');
+
+        Route::get('/ratings', [CoordinatorController::class, 'ratings'])->name('ratings');
 
         // Profile
         Route::get('/profile', [CoordinatorController::class, 'profile'])->name('profile');
@@ -122,13 +123,16 @@ Route::middleware(['auth'])
         // Events
         Route::post('/events', [CoordinatorController::class, 'storeEvent'])->name('events.store'); 
 
-// Income & Payments
-        Route::get('/income', [CoordinatorController::class, 'income'])->name('income');
-        Route::post('/payments', [CoordinatorController::class, 'storePayment'])->name('payments.store');
+        // Reports Sub-routes
+        Route::prefix('reports')->name('reports.')->group(function () {
+            Route::get('/clients', [CoordinatorController::class, 'reportClients'])->name('clients');
+            Route::get('/bookings', [CoordinatorController::class, 'reportBookings'])->name('bookings');
+            Route::get('/income', [CoordinatorController::class, 'reportIncome'])->name('income');
+            Route::get('/feedback', [CoordinatorController::class, 'reportFeedback'])->name('feedback');
+            Route::get('/payment-breakdown', [CoordinatorController::class, 'reportPaymentBreakdown'])->name('payment-breakdown');
 
-        // Subscription & Checkout
-        Route::get('/subscription', fn () => view('coordinator.subscription'))->name('subscription');
-        Route::get('/checkout', [CoordinatorController::class, 'checkout'])->name('checkout'); // FIXED THIS LINE
+            Route::get('/diagnostics', [CoordinatorController::class, 'diagnostics'])->name('diagnostics');
+        });
     });
 /*
 |-------------------------------------------------------------------------- 
@@ -154,6 +158,10 @@ Route::middleware(['auth'])->prefix('client')->name('client.')->group(function (
     // Ratings
     Route::post('/ratings', [RatingController::class, 'store'])->name('ratings.store');
     Route::get('/ratings', [ClientController::class, 'ratings'])->name('ratings');
+
+    // Payment Breakdown (New)
+    Route::get('/bookings/{booking}/payments', [ClientController::class, 'bookingPaymentBreakdown'])->name('bookings.payments');
+    Route::get('/reports/payment-breakdown', [ClientController::class, 'reportPaymentBreakdown'])->name('reports.payment-breakdown');
 
     // Profile
     Route::get('/profile', [ClientController::class, 'edit'])->name('profile');

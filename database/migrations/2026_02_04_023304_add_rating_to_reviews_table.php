@@ -9,18 +9,25 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up()
-{
-    Schema::table('reviews', function (Blueprint $table) {
-        $table->decimal('rating', 3, 1)->default(0); // e.g., 4.5
-    });
-}
+    public function up(): void
+    {
+        Schema::table('reviews', function (Blueprint $table) {
+            // This CHECK is what fixes your error
+            if (!Schema::hasColumn('reviews', 'rating')) {
+                $table->decimal('rating', 3, 1)->default(0);
+            }
+        });
+    }
 
-public function down()
-{
-    Schema::table('reviews', function (Blueprint $table) {
-        $table->dropColumn('rating');
-    });
-}
-
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('reviews', function (Blueprint $table) {
+            if (Schema::hasColumn('reviews', 'rating')) {
+                $table->dropColumn('rating');
+            }
+        });
+    }
 };

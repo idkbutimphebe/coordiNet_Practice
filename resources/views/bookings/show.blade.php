@@ -113,7 +113,7 @@
                         </div>
                         <h2 class="text-4xl md:text-5xl font-serif text-[#F6F8F5] leading-tight">
                             {{-- Safe Date Parsing --}}
-                            {{ $booking->event_date instanceof \Carbon\Carbon ? $booking->event_date->format('F d, Y') : ($booking->event_date ? \Carbon\Carbon::parse($booking->event_date)->format('F d, Y') : 'Date TBD') }}
+                         {{ $booking->event->event_type ?? $booking->event_name ?? 'N/A' }}
                         </h2>
                         <p class="text-[#A1BC98] mt-2 text-sm font-medium tracking-wide">
                             {{ $booking->event_date instanceof \Carbon\Carbon ? $booking->event_date->format('l') : ($booking->event_date ? \Carbon\Carbon::parse($booking->event_date)->format('l') : '') }} 

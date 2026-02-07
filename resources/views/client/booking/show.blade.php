@@ -123,7 +123,7 @@
                     <div>
                         <div class="flex items-center gap-2 mb-3">
                             <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#A1BC98] text-[#3E3F29] uppercase tracking-wider">
-                                {{ $booking->event_type ?? 'Event' }}
+                                {{ $booking->event->event_type ?? $booking->event_name ?? 'N/A' }}
                             </span>
                         </div>
                         <h2 class="text-4xl md:text-5xl font-serif text-[#F6F8F5] leading-tight">
@@ -229,6 +229,103 @@
                     <h4 class="font-bold text-[#3E3F29] text-sm">Assigned Coordinator</h4>
                     <p class="text-sm text-gray-500">{{ $booking->coordinator->user->name ?? $booking->coordinator->name ?? 'Not yet assigned' }}</p>
                 </div>
+            </div>
+
+            {{-- PAYMENT BREAKDOWN SECTION --}}
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mt-6">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-10 h-10 rounded-xl bg-[#F6F8F5] text-[#3E3F29] flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="1" x2="12" y2="23"></line>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-[#3E3F29]">Payment Status</h4>
+                        <p class="text-xs text-gray-400">Track your payments</p>
+                    </div>
+                </div>
+
+                {{-- Summary Cards --}}
+                <div class="grid grid-cols-3 gap-3 mb-6">
+                    {{-- Total Amount --}}
+                    <div class="bg-[#F6F8F5] rounded-xl p-4 text-center">
+                        <p class="text-[10px] uppercase text-gray-500 font-bold mb-1">Total Amount</p>
+                        <p class="text-xl font-bold text-[#3E3F29]">₱{{ number_format($booking->total_amount, 2) }}</p>
+                    </div>
+
+                    {{-- Amount Paid --}}
+                    <div class="bg-green-50 rounded-xl p-4 text-center border border-green-100">
+                        <p class="text-[10px] uppercase text-green-700 font-bold mb-1">Paid</p>
+                        <p class="text-xl font-bold text-green-700">₱{{ number_format($booking->total_paid, 2) }}</p>
+                    </div>
+
+                    {{-- Remaining Balance --}}
+                    <div class="bg-red-50 rounded-xl p-4 text-center border border-red-100">
+                        <p class="text-[10px] uppercase text-red-700 font-bold mb-1">Balance</p>
+                        <p class="text-xl font-bold text-red-700">₱{{ number_format($booking->remaining_balance, 2) }}</p>
+                    </div>
+                </div>
+
+                {{-- Progress Bar --}}
+                <div class="mb-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-xs font-bold text-gray-500 uppercase">Payment Progress</p>
+                        <p class="text-sm font-bold text-[#3E3F29]">{{ $booking->payment_percentage }}%</p>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-[#A1BC98] h-2 rounded-full transition-all duration-300" style="width: {{ $booking->payment_percentage }}%"></div>
+                    </div>
+                </div>
+
+                {{-- Payment Status Badge --}}
+                <div class="mb-6">
+                    <span class="inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider
+                        {{ $booking->payment_status === 'paid' ? 'bg-green-100 text-green-700' : '' }}
+                        {{ $booking->payment_status === 'partial' ? 'bg-yellow-100 text-yellow-700' : '' }}
+                        {{ $booking->payment_status === 'unpaid' ? 'bg-red-100 text-red-700' : '' }}">
+                        {{ ucfirst($booking->payment_status) }}
+                    </span>
+                </div>
+
+                {{-- Payment History --}}
+                @if($booking->payments->count() > 0)
+                    <div>
+                        <h5 class="font-bold text-[#3E3F29] mb-3 text-sm">Payment History</h5>
+                        <div class="space-y-2">
+                            @foreach($booking->payments as $payment)
+                                <div class="flex items-start justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <p class="text-sm font-bold text-[#3E3F29]">
+                                                @if($payment->method == 'cash') 💵
+                                                @elseif($payment->method == 'gcash') 📱
+                                                @elseif($payment->method == 'bank') 🏦
+                                                @else 📝
+                                                @endif
+                                                {{ ucfirst($payment->method) }}
+                                            </p>
+                                        </div>
+                                        <p class="text-[10px] text-gray-500 mt-1">
+                                            {{ \Carbon\Carbon::parse($payment->date_paid)->format('M d, Y') }}
+                                        </p>
+                                        @if($payment->reference_number)
+                                            <p class="text-[10px] text-gray-500 font-mono">Ref: {{ $payment->reference_number }}</p>
+                                        @endif
+                                        @if($payment->notes)
+                                            <p class="text-[10px] text-gray-600 italic mt-1">{{ $payment->notes }}</p>
+                                        @endif
+                                    </div>
+                                    <p class="text-sm font-bold text-[#3E3F29]">₱{{ number_format($payment->amount, 2) }}</p>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @else
+                    <div class="text-center py-6">
+                        <p class="text-gray-500 text-sm">No payments recorded yet</p>
+                    </div>
+                @endif
             </div>
 
             {{-- Rating Section --}}

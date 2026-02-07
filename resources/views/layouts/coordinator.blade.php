@@ -32,7 +32,7 @@
 
 <a href="{{ route('coordinator.bookings') }}"
    class="flex items-center gap-3 px-4 py-2 rounded transition
-   {{ request()->routeIs('coordinator.bookings') ? 'bg-white/20 font-semibold' : 'hover:bg-white/20' }}">
+   {{ request()->routeIs('coordinator.bookings*') ? 'bg-white/20 font-semibold' : 'hover:bg-white/20' }}">
     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke-width="2"/>
         <line x1="16" y1="2" x2="16" y2="6" stroke-width="2"/>
@@ -77,15 +77,62 @@
     <span>Income / Payments</span>
 </a>
 
-<a href="{{ route('coordinator.reports') }}"
-   class="flex items-center gap-3 px-4 py-2 rounded transition
-   {{ request()->routeIs('coordinator.reports') ? 'bg-white/20 font-semibold' : 'hover:bg-white/20' }}">
-    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
-              d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-    </svg>
-    <span>Reports</span>
-</a>
+<!-- Reports -->
+<div x-data="{ open: {{ request()->is('coordinator/reports*') ? 'true' : 'false' }} }" class="relative">
+
+    <button @click="open = !open"
+        class="flex items-center justify-between w-full gap-3 px-4 py-2 rounded transition
+               {{ request()->is('coordinator/reports*') ? 'bg-white/20 font-semibold' : 'hover:bg-white/20' }}">
+
+        <div class="flex items-center gap-3">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                      d="M3 3v18h18
+                         M9 17V9
+                         M13 17V5
+                         M17 17v-7"/>
+            </svg>
+            <span>Reports</span>
+        </div>
+
+        <svg :class="{ 'rotate-90': open }"
+             class="w-3 h-3 transition-transform"
+             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  d="M9 5l7 7-7 7"/>
+        </svg>
+    </button>
+
+    <!-- Submenu -->
+    <div x-show="open" x-cloak class="mt-1 pl-10 flex flex-col gap-1 text-sm">
+
+        <a href="{{ route('coordinator.reports.clients') }}"
+           class="px-2 py-1 rounded hover:bg-white/20
+                  {{ request()->routeIs('coordinator.reports.clients') ? 'bg-white/20 font-semibold' : '' }}">
+            List of Clients
+        </a>
+
+        <a href="{{ route('coordinator.reports.bookings') }}"
+           class="px-2 py-1 rounded hover:bg-white/20
+                  {{ request()->routeIs('coordinator.reports.bookings') ? 'bg-white/20 font-semibold' : '' }}">
+            List of Bookings
+        </a>
+
+        <a href="{{ route('coordinator.reports.income') }}"
+           class="px-2 py-1 rounded hover:bg-white/20
+                  {{ request()->routeIs('coordinator.reports.income') ? 'bg-white/20 font-semibold' : '' }}">
+            Income
+        </a>
+
+        <a href="{{ route('coordinator.reports.feedback') }}"
+           class="px-2 py-1 rounded hover:bg-white/20
+                  {{ request()->routeIs('coordinator.reports.feedback') ? 'bg-white/20 font-semibold' : '' }}">
+            Client Ratings & Feedback
+        </a>
+
+    </div>
+</div>
+
 
 <a href="{{ route('coordinator.profile') }}"
    class="flex items-center gap-3 px-4 py-2 rounded transition

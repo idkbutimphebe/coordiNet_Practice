@@ -9,18 +9,25 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-   public function up()
-{
-    Schema::table('reviews', function (Blueprint $table) {
-        $table->text('feedback')->nullable();
-    });
-}
+    public function up(): void
+    {
+        Schema::table('reviews', function (Blueprint $table) {
+            // Check if column exists first to avoid crash
+            if (!Schema::hasColumn('reviews', 'feedback')) {
+                $table->text('feedback')->nullable();
+            }
+        });
+    }
 
-public function down()
-{
-    Schema::table('reviews', function (Blueprint $table) {
-        $table->dropColumn('feedback');
-    });
-}
-
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('reviews', function (Blueprint $table) {
+            if (Schema::hasColumn('reviews', 'feedback')) {
+                $table->dropColumn('feedback');
+            }
+        });
+    }
 };
